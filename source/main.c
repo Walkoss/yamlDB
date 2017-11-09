@@ -9,6 +9,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("YAML PETRILLO !\n");
+    printf("YAML Walkoss !\n");
     return 0;
 }
