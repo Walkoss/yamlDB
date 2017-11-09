@@ -9,6 +9,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("YAML Iliasse !\n");
+    printf("YAML WALKOSS dans la branche 'walkoss' !\n");
     return 0;
 }
