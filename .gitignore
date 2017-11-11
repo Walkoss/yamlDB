@@ -74,3 +74,9 @@ CTestTestfile.cmake
 build
 
 # End of https://www.gitignore.io/api/cmake,clion+all
+
+resources/*
+!resources/.gitkeep
+
+yamlDB
+yamlDB.cbp
