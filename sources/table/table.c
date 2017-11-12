@@ -19,7 +19,7 @@ int removeTable(const char *databaseName, const char *tableName) {
     char *path;
 
     path = xmalloc(sizeof(char) * (strlen(RESOURCES_DIR) + strlen
-            (tableName) + strlen(tableName) + 5), __func__);
+            (databaseName) + strlen(tableName) + 6), __func__);
     if (!path)
         return 1;
 
