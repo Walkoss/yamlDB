@@ -19,4 +19,6 @@
 
 int addDatabase(const char *databaseName);
 
+char *getDatabasePath(const char *databaseName);
+
 #endif //YAMLDB_DATABASE_H
