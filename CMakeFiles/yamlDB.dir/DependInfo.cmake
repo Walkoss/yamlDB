@@ -4,7 +4,10 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/source/main.c" "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir/source/main.c.o"
+  "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/sources/database/database.c" "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir/sources/database/database.c.o"
+  "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/sources/main.c" "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir/sources/main.c.o"
+  "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/sources/table/table.c" "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir/sources/table/table.c.o"
+  "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/sources/utils/xmalloc.c" "/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir/sources/utils/xmalloc.c.o"
   )
 set(CMAKE_C_COMPILER_ID "AppleClang")
 
