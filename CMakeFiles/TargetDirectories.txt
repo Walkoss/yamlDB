@@ -1,3 +1,0 @@
-/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/rebuild_cache.dir
-/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/edit_cache.dir
-/Users/alexis/Documents/Esgi/Projets/C/yamlDB/CMakeFiles/yamlDB.dir

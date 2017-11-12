@@ -1,1 +1,0 @@
-/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/yamlDB.dir/sources/main.c.o CMakeFiles/yamlDB.dir/sources/database/database.c.o CMakeFiles/yamlDB.dir/sources/utils/xmalloc.c.o CMakeFiles/yamlDB.dir/sources/table/table.c.o  -o yamlDB 
