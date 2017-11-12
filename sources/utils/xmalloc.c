@@ -13,7 +13,7 @@ void *xmalloc(size_t size, const char *functionName) {
 
     ptr = malloc(size);
     if (!ptr) {
-        fprintf(stderr, "Malloc failed for %s function", functionName);
+        fprintf(stderr, "Malloc failed for %s function\n", functionName);
     }
     return ptr;
 }
