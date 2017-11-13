@@ -33,10 +33,10 @@ int removeTable(const char *databaseName, const char *tableName) {
         fprintf(stderr, "An error has occured when removing table '%s': "
                 "%s\n", tableName, strerror(errno));
 
-        free (path);
+        free(path);
         return 1;
     }
 
-    free (path);
+    free(path);
     return 0;
 }
