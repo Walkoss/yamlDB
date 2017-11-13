@@ -32,8 +32,11 @@ int removeTable(const char *databaseName, const char *tableName) {
     if (remove(path) == -1) {
         fprintf(stderr, "An error has occured when removing table '%s': "
                 "%s\n", tableName, strerror(errno));
+
+        free (path);
         return 1;
     }
 
+    free (path);
     return 0;
 }
