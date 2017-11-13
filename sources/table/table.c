@@ -15,6 +15,38 @@
  * @param tableName
  * @return 0 if success, 1 for error
  */
+int addTable(const char *databaseName, const char *tableName) {
+    char *path;
+
+    path = xmalloc(sizeof(char) * strlen(RESOURCES_DIR) + strlen
+            (tableName), __func__);
+    if (!path)
+        return 1;
+
+    strcpy(path, RESOURCES_DIR);
+    strcat(path, databaseName);
+    strcat(path, "/");
+    strcat(path, tableName);
+    strcat(path, ".yml");
+    FILE *fp = fopen (path, "w" );
+
+    if (!fp) {
+        fprintf(stderr, "An error has occured when creating table '%s': "
+                "%s\n", tableName, strerror(errno));
+        free(path);
+        return 1;
+    }
+
+    free(path);
+    return 0;
+}
+
+/**
+ *
+ * @param databaseName
+ * @param tableName
+ * @return 0 if success, 1 for error
+ */
 int removeTable(const char *databaseName, const char *tableName) {
     char *path;
 

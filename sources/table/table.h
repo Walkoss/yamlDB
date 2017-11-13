@@ -10,6 +10,7 @@
 
 #include "../utils/xmalloc.h"
 
+int addTable(const char *databaseName, const char *tableName);
 int removeTable(const char *databaseName, const char *tableName);
 
 #endif //YAMLDB_TABLE_H
