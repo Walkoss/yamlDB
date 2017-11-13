@@ -34,22 +34,13 @@ int removeFile(const char *fpath,
                const struct stat *sb,
                int tflag,
                struct FTW *ftwbuf) {
-    if (tflag == FTW_DP) {
-        if (rmdir(fpath) == -1) {
-            fprintf(stderr,
-                    "An error has occured when removing directory '%s': %s\n",
-                    fpath,
-                    strerror(errno));
-            return 1;
-        }
-    } else if (tflag == FTW_F) {
-        if (unlink(fpath) == -1) {
-            fprintf(stderr,
-                    "An error has occured when removing file '%s': %s\n",
-                    fpath,
-                    strerror(errno));
-            return 1;
-        }
+    if (remove(fpath) == -1) {
+        fprintf(stderr,
+                "An error has occured when removing directory/file '%s': "
+                        "%s\n",
+                fpath,
+                strerror(errno));
+        return 1;
     }
     return 0;
 }
