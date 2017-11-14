@@ -31,6 +31,53 @@ int addDatabase(const char *databaseName) {
 }
 
 /**
+ * Remove file 'fpath'
+ * Function pointer passed as parameter to ntfw function, see removeDatabase function below
+ * @param fpath
+ * @param sb
+ * @param tflag
+ * @param ftwbuf
+ * @return
+ */
+int removeFile(const char *fpath,
+               const struct stat *sb,
+               int tflag,
+               struct FTW *ftwbuf) {
+    if (remove(fpath) == -1) {
+        fprintf(stderr,
+                "An error has occured when removing directory/file '%s': "
+                        "%s\n",
+                fpath,
+                strerror(errno));
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Remove directory 'databaseName' and its content
+ * @param databaseName
+ * @return
+ */
+int removeDatabase(const char *databaseName) {
+    char *path;
+
+    path = getDatabasePath(databaseName);
+    if (!path)
+        return 1;
+
+    if (nftw(path, removeFile, NOPENFD, FTW_DEPTH) == -1) {
+        fprintf(stderr, "An error has occured when removing database '%s': "
+                "%s\n", databaseName, strerror(errno));
+        free(path);
+        return 1;
+    }
+
+    free(path);
+    return 0;
+}
+
+/**
  * Based on RESOURCES_DIR, this function returns an absolute path to resources
  * Example: 'test' -> 'resources/test'
  * @param databaseName
