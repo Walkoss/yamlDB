@@ -30,6 +30,15 @@ int addDatabase(const char *databaseName) {
     return 0;
 }
 
+/**
+ * Remove file 'fpath'
+ * Function pointer passed as parameter to ntfw function, see removeDatabase function below
+ * @param fpath
+ * @param sb
+ * @param tflag
+ * @param ftwbuf
+ * @return
+ */
 int removeFile(const char *fpath,
                const struct stat *sb,
                int tflag,
@@ -45,6 +54,11 @@ int removeFile(const char *fpath,
     return 0;
 }
 
+/**
+ * Remove directory 'databaseName' and its content
+ * @param databaseName
+ * @return
+ */
 int removeDatabase(const char *databaseName) {
     char *path;
 
