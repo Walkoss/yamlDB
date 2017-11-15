@@ -9,23 +9,22 @@
 #define YAMLDB_TABLE_H
 
 #include "../utils/xmalloc.h"
+#include "../field/field.h"
 
 typedef struct STable {
-    struct SField *first;
+    char *name;
+    // TODO: init pk to 0
+    unsigned int pk;
+    Field *fieldNext;
 } Table;
 
-typedef struct SField {
-    char* name;
-    char* type;
-    struct SField* next;
-} Field;
 
-
-Table *initialization();
-
-int newField(Table *table, char* name, char* type);
-
-int addFields(Table *table, FILE *file);
+//
+//Table *initialization();
+//
+//int newField(Table *table, char *name, char *type);
+//
+//int addFields(Table *table, FILE *file);
 
 int addTable(const char *databaseName, const char *tableName, Table *table);
 

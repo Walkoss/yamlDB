@@ -10,20 +10,28 @@
 #include "table.h"
 
 /**
- *
- * @return struct table with first node pointing to NULL
+ * Init tables structure
+ * @param databaseName
+ * @return
  */
-Table *initialization()
-{
-    Table *table = malloc(sizeof(Table));
+Table *initTable(char *databaseName) {
+    Database *database = xmalloc(sizeof(Table), __func__);
 
-    if (!table)
-        return 0;
+    if (database) {
+        database->name = databaseName;
+        // TODO: initTables, initFields
+        database->tableNext = NULL;
+    }
 
-    table->first = NULL;
-
-    return (table);
+    return database;
 }
+
+void freeDatabase(Database *database) {
+    free(database->name);
+    // TODO: freeTables, freeFields
+    free(database);
+}
+
 
 /**
  *
@@ -32,8 +40,7 @@ Table *initialization()
  * @param type
  * @return 0 if success, 1 for error
  */
-int newField(Table *table, char* name, char* type)
-{
+int newField(Table *table, char *name, char *type) {
     Field *new = malloc(sizeof(*new));
 
     if (!table || !new)
@@ -47,8 +54,7 @@ int newField(Table *table, char* name, char* type)
 
     if (current == NULL) {
         table->first = new;
-    }
-    else
+    } else
         while (current != NULL) {
             if (current->next == NULL) {
                 current->next = new;
@@ -69,15 +75,12 @@ int newField(Table *table, char* name, char* type)
 int addFields(Table *table, FILE *file) {
     Field *current = table->first;
 
-    fprintf(file, "-\n");
+    fprintf(file, "fields:\n");
 
-    while (current != NULL)
-    {
-        fprintf(file, "%s: %s\n", current->name, current->type);
+    while (current != NULL) {
+        fprintf(file, "\t%s: %d\n", current->name, 1);
         current = current->next;
     }
-
-    fprintf(file, "-\n");
 
     return 0;
 }
@@ -102,7 +105,7 @@ int addTable(const char *databaseName, const char *tableName, Table *table) {
     strcat(path, "/");
     strcat(path, tableName);
     strcat(path, ".yml");
-    file = fopen (path, "w" );
+    file = fopen(path, "w");
 
     if (!file) {
         fprintf(stderr, "An error has occured when creating table '%s': "
@@ -111,7 +114,7 @@ int addTable(const char *databaseName, const char *tableName, Table *table) {
         return 1;
     }
 
-    addFields(table, file);
+//    addFields(table, file);
     fclose(file);
     free(path);
 

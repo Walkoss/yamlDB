@@ -9,11 +9,38 @@
 #include "database.h"
 
 /**
- * Add a database
+ * Init database
+ * @param databaseName
+ * @return
+ */
+Database *initDatabase(const char *databaseName) {
+    Database *database;
+    char *databaseNameCopy;
+
+    database = xmalloc(sizeof(Table), __func__);
+    databaseNameCopy = xmalloc(sizeof(strlen(databaseName)) + 1, __func__);
+
+    if (database && databaseNameCopy) {
+        database->name = strcpy(databaseNameCopy, databaseName);
+        // TODO: initTables, initFields
+        database->tableNext = NULL;
+    }
+
+    return database;
+}
+
+void freeDatabase(Database *database) {
+    free(database->name);
+    // TODO: freeTables, freeFields
+    free(database);
+}
+
+/**
+ * Create a database
  * @param databaseName
  * @return 0 if success, 1 for error
  */
-int addDatabase(const char *databaseName) {
+int createDatabase(const char *databaseName) {
     char *path;
 
     path = getDatabasePath(databaseName);

@@ -19,8 +19,18 @@
 #include <sys/stat.h>
 #include <ftw.h>
 #include "../utils/xmalloc.h"
+#include "../table/table.h"
 
-int addDatabase(const char *databaseName);
+typedef struct SDatabase {
+    char *name;
+    Table *tableNext;
+} Database;
+
+Database *initDatabase(const char *databaseName);
+
+void freeDatabase(Database *database);
+
+int createDatabase(const char *databaseName);
 
 int removeDatabase(const char *databaseName);
 
