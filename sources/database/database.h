@@ -23,16 +23,19 @@
 
 typedef struct SDatabase {
     char *name;
+    int isUsed;
     Table *tableHead;
 } Database;
 
 Database *initDatabase(const char *databaseName);
 
-void freeDatabase(Database *database);
+Database *useDatabase(Database *);
 
-int createDatabase(const char *databaseName);
+int createDatabase(Database *);
 
-int removeDatabase(const char *databaseName);
+int dropDatabase(Database *);
+
+void freeDatabase(Database *);
 
 char *getDatabasePath(const char *databaseName);
 

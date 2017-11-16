@@ -21,6 +21,7 @@ Database *initDatabase(const char *databaseName) {
     databaseNameCopy = xmalloc(sizeof(strlen(databaseName)) + 1, __func__);
 
     if (database && databaseNameCopy) {
+        database->isUsed = 1;
         database->name = strcpy(databaseNameCopy, databaseName);
         // TODO: initTables
         database->tableHead = NULL;

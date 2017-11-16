@@ -6,7 +6,6 @@
 **  Description: Functions for manage tables
 */
 
-#include "../database/database.h"
 #include "table.h"
 
 /**
@@ -43,46 +42,19 @@ void freeTables(Database *database) {
 
 /**
  *
- * @param table
- * @param file
- * @return 0 if success
+ * @param tableName
+ * @param database
+ * @return
  */
-int addFields(Table *table, FILE *file) {
-    Field *field;
-
-    field = table->fieldHead;
-    fprintf(file, "fields:\n");
-
-    while (field != NULL) {
-        fprintf(file, "\t%s: %d\n", field->name, field->type);
-        field = field->next;
-    }
-
-    return 0;
-}
-
-/**
- *
- * @param databaseName
- * @param table
- * @return 0 if success, 1 for error
- */
-int createTable(const char *tableName, Table *table) {
+int createTable(Database *database, Table *table) {
     char *path;
     FILE *file;
 
-    path = xmalloc(sizeof(char) * strlen(RESOURCES_DIR) + strlen
-            (table->name), __func__);
+    path = getTablePath(database->name, table->name);
     if (!path)
         return 1;
 
-    strcpy(path, RESOURCES_DIR);
-    strcat(path, tableName);
-    strcat(path, "/");
-    strcat(path, table->name);
-    strcat(path, ".yml");
-    file = fopen(path, "w");
-
+    file = fopen(path, "w+");
     if (!file) {
         fprintf(stderr, "An error has occured when creating table '%s': "
                 "%s\n", table->name, strerror(errno));
@@ -103,19 +75,12 @@ int createTable(const char *tableName, Table *table) {
  * @param table
  * @return 0 if success, 1 for error
  */
-int removeTable(const char *databaseName, Table *table) {
+int removeTable(Database *database, Table *table) {
     char *path;
 
-    path = xmalloc(sizeof(char) * (strlen(RESOURCES_DIR) + strlen
-            (databaseName) + strlen(table->name) + 6), __func__);
+    path = getTablePath(database->name, table->name);
     if (!path)
         return 1;
-
-    strcpy(path, RESOURCES_DIR);
-    strcat(path, databaseName);
-    strcat(path, "/");
-    strcat(path, table->name);
-    strcat(path, ".yml");
 
     if (remove(path) == -1) {
         fprintf(stderr, "An error has occured when removing table '%s': "
@@ -125,6 +90,32 @@ int removeTable(const char *databaseName, Table *table) {
         return 1;
     }
 
+    // TODO: freeTable(database, table) -> freeFields(table)
+
     free(path);
     return 0;
+}
+
+/**
+ * Based on RESOURCES_DIR and databaseName, this function returns an absolute
+ * path to the file
+ * @param databaseName
+ * @param tableName
+ * @return
+ */
+char *getTablePath(const char *databaseName, const char *tableName) {
+    char *path;
+
+    path = xmalloc(sizeof(char) * (strlen(RESOURCES_DIR) + strlen
+            (databaseName) + strlen(tableName) + 6), __func__);
+    if (!path)
+        return NULL;
+
+    strcpy(path, RESOURCES_DIR);
+    strcat(path, databaseName);
+    strcat(path, "/");
+    strcat(path, tableName);
+    strcat(path, ".yml");
+
+    return path;
 }

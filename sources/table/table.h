@@ -9,6 +9,7 @@
 #define YAMLDB_TABLE_H
 
 #include "../utils/xmalloc.h"
+#include "../database/database.h"
 #include "../field/field.h"
 
 typedef struct STable {
@@ -26,8 +27,10 @@ void freeTables(Database *database);
 
 //int addFields(Table *table, FILE *file);
 
-int createTable(const char *databaseName, Table *table);
+int createTable(Database *database, Table *table);
 
-int removeTable(const char *databaseName, Table *table);
+int removeTable(Database *database, Table *table);
+
+char *getTablePath(const char *databaseName, const char *tableName);
 
 #endif //YAMLDB_TABLE_H
