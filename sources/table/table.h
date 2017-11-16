@@ -20,9 +20,9 @@ typedef struct STable {
 } Table;
 
 
-Table *initTables(char *tableName);
+Table *initTables(Database *database);
 
-void freeTables(Table *table);
+void freeTables(Database *database);
 
 //int addFields(Table *table, FILE *file);
 

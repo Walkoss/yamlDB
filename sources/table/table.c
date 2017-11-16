@@ -14,12 +14,13 @@
  * @param databaseName
  * @return
  */
-Table *initTables(char *tableName) {
+Table *initTables(Database *database) {
     Table *table;
-    table = xmalloc(sizeof(Table), __func__);
+    table = database->tableHead;
 
     while (table->next != NULL) {
-        table->name = tableName;
+        // TODO: remplir avec les fichiers .yml
+        table->name = "tableName";
         // TODO: initFields
         table->fieldHead = NULL;
     }
@@ -27,7 +28,10 @@ Table *initTables(char *tableName) {
     return table;
 }
 
-void freeTables(Table *table) {
+void freeTables(Database *database) {
+    Table *table;
+
+    table = database->tableHead;
     while (table->next != NULL) {
         free(table->name);
 
@@ -63,7 +67,7 @@ int addFields(Table *table, FILE *file) {
  * @param table
  * @return 0 if success, 1 for error
  */
-int createTable(const char *databaseName, Table *table) {
+int createTable(const char *tableName, Table *table) {
     char *path;
     FILE *file;
 
@@ -73,7 +77,7 @@ int createTable(const char *databaseName, Table *table) {
         return 1;
 
     strcpy(path, RESOURCES_DIR);
-    strcat(path, databaseName);
+    strcat(path, tableName);
     strcat(path, "/");
     strcat(path, table->name);
     strcat(path, ".yml");
