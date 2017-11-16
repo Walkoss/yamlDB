@@ -3,13 +3,15 @@
 int main() {
     Database *database;
 
-    database = initDatabase("test");
+    createDatabase("Database");
+    database = initDatabase("myDatabase");
 
     if (database != NULL) {
-        printf("db = %s", database->name);
+        printf("Database = %s\n", database->name);
     }
 
     freeDatabase(database);
+    //removeDatabase("Database");
 
     return 0;
 }

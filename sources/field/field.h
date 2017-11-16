@@ -20,6 +20,7 @@ typedef enum EFieldType {
 typedef struct SField {
     char *name;
     FieldType type;
+    struct SField *next;
 } Field;
 
 #endif //YAMLDB_FIELD_H

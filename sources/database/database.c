@@ -22,8 +22,8 @@ Database *initDatabase(const char *databaseName) {
 
     if (database && databaseNameCopy) {
         database->name = strcpy(databaseNameCopy, databaseName);
-        // TODO: initTables, initFields
-        database->tableNext = NULL;
+        // TODO: initTables
+        database->tableHead = NULL;
     }
 
     return database;
@@ -31,7 +31,7 @@ Database *initDatabase(const char *databaseName) {
 
 void freeDatabase(Database *database) {
     free(database->name);
-    // TODO: freeTables, freeFields
+    // TODO: freeTables
     free(database);
 }
 

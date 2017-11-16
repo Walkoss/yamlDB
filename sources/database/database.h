@@ -23,7 +23,7 @@
 
 typedef struct SDatabase {
     char *name;
-    Table *tableNext;
+    Table *tableHead;
 } Database;
 
 Database *initDatabase(const char *databaseName);
