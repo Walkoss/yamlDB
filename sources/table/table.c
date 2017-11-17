@@ -12,7 +12,7 @@
  * Init tables structure
  * @param databaseName
  * @return
- */
+ *//*
 Table *initTables(Database *database) {
     Table *table;
     table = database->tableHead;
@@ -25,8 +25,8 @@ Table *initTables(Database *database) {
     }
 
     return table;
-}
-
+}*/
+/*
 void freeTables(Database *database) {
     Table *table;
 
@@ -38,14 +38,14 @@ void freeTables(Database *database) {
         // TODO: freeFields
         //free(table);
     }
-}
+}*/
 
 /**
  *
  * @param tableName
  * @param database
  * @return
- */
+ *//*
 int createTable(Database *database, Table *table) {
     char *path;
     FILE *file;
@@ -67,14 +67,14 @@ int createTable(Database *database, Table *table) {
     free(path);
 
     return 0;
-}
+}*/
 
 /**
  *
  * @param databaseName
  * @param table
  * @return 0 if success, 1 for error
- */
+ *//*
 int removeTable(Database *database, Table *table) {
     char *path;
 
@@ -94,7 +94,7 @@ int removeTable(Database *database, Table *table) {
 
     free(path);
     return 0;
-}
+}*/
 
 /**
  * Based on RESOURCES_DIR and databaseName, this function returns an absolute
@@ -102,7 +102,7 @@ int removeTable(Database *database, Table *table) {
  * @param databaseName
  * @param tableName
  * @return
- */
+ *//*
 char *getTablePath(const char *databaseName, const char *tableName) {
     char *path;
 
@@ -118,4 +118,4 @@ char *getTablePath(const char *databaseName, const char *tableName) {
     strcat(path, ".yml");
 
     return path;
-}
+}*/

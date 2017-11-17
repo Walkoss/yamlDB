@@ -5,11 +5,11 @@
 **
 **  Description: Header file for table, for mangage tables
 */
+#include "../database/database.h"
+
 #ifndef YAMLDB_TABLE_H
 #define YAMLDB_TABLE_H
 
-#include "../utils/xmalloc.h"
-#include "../database/database.h"
 #include "../field/field.h"
 
 typedef struct STable {
@@ -22,7 +22,7 @@ typedef struct STable {
 
 
 Table *initTables(Database *database);
-
+/*
 void freeTables(Database *database);
 
 //int addFields(Table *table, FILE *file);
@@ -30,7 +30,7 @@ void freeTables(Database *database);
 int createTable(Database *database, Table *table);
 
 int removeTable(Database *database, Table *table);
-
+*/
 char *getTablePath(const char *databaseName, const char *tableName);
 
 #endif //YAMLDB_TABLE_H

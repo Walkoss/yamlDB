@@ -5,7 +5,7 @@
 **
 **  Description: 
 */
-
+#include "../table/table.h"
 #ifndef YAMLDB_DATABASE_H
 #define YAMLDB_DATABASE_H
 
@@ -19,7 +19,6 @@
 #include <sys/stat.h>
 #include <ftw.h>
 #include "../utils/xmalloc.h"
-#include "../table/table.h"
 
 typedef struct SDatabase {
     char *name;

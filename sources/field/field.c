@@ -13,7 +13,7 @@
  * @param table
  * @param file
  * @return 0 if success
- */
+ *//*
 int addFields(Table *table, FILE *file) {
     Field *field;
 
@@ -28,4 +28,4 @@ int addFields(Table *table, FILE *file) {
     // TODO: add node
 
     return 0;
-}
+}*/

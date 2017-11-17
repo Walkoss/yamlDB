@@ -21,19 +21,36 @@ Database *initDatabase(const char *databaseName) {
     databaseNameCopy = xmalloc(sizeof(strlen(databaseName)) + 1, __func__);
 
     if (database && databaseNameCopy) {
-        database->isUsed = 1;
+        database->isUsed = 0;
         database->name = strcpy(databaseNameCopy, databaseName);
-        // TODO: initTables
         database->tableHead = NULL;
     }
 
     return database;
 }
 
+/**
+ * Free Database
+ * @param database
+ */
 void freeDatabase(Database *database) {
     free(database->name);
+    database->isUsed = 0;
     // TODO: freeTables
     free(database);
+}
+
+/**
+ * Use Database
+ * @param database
+ * @return
+ */
+Database *useDatabase(Database* database) {
+    database->isUsed = 1;
+    // TODO : Remplir les tables en fonction des fichiers yaml
+    database->tableHead = NULL;
+
+    return database;
 }
 
 /**
@@ -41,15 +58,15 @@ void freeDatabase(Database *database) {
  * @param databaseName
  * @return 0 if success, 1 for error
  */
-int createDatabase(const char *databaseName) {
+int createDatabase(Database *database) {
     char *path;
 
-    path = getDatabasePath(databaseName);
+    path = getDatabasePath(database->name);
     if (!path)
         return 1;
     if (mkdir(path, 0777) == -1) {
         fprintf(stderr, "An error has occured when creating database '%s': "
-                "%s\n", databaseName, strerror(errno));
+                "%s\n", database->name, strerror(errno));
         free(path);
         return 1;
     }
@@ -87,16 +104,16 @@ int removeFile(const char *fpath,
  * @param databaseName
  * @return
  */
-int removeDatabase(const char *databaseName) {
+int dropDatabase(Database *database) {
     char *path;
 
-    path = getDatabasePath(databaseName);
+    path = getDatabasePath(database->name);
     if (!path)
         return 1;
 
     if (nftw(path, removeFile, NOPENFD, FTW_DEPTH) == -1) {
         fprintf(stderr, "An error has occured when removing database '%s': "
-                "%s\n", databaseName, strerror(errno));
+                "%s\n", database->name, strerror(errno));
         free(path);
         return 1;
     }

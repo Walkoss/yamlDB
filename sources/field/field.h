@@ -9,8 +9,6 @@
 #ifndef YAMLDB_FIELD_H
 #define YAMLDB_FIELD_H
 
-#include "../table/table.h"
-
 typedef enum EFieldType {
     PK = 1,
     INT,
@@ -25,6 +23,6 @@ typedef struct SField {
     struct SField *next;
 } Field;
 
-int addFields(Table *table, FILE *file);
+//int addFields(Table *table, FILE *file);
 
 #endif //YAMLDB_FIELD_H
