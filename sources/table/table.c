@@ -9,7 +9,7 @@
 #include "../database/database.h"
 
 /**
- * Init Table
+ * Initialize the tables in Database structure
  * @param database
  */
 void initTables(Database *database) {
@@ -37,28 +37,100 @@ void initTables(Database *database) {
     closedir(dir);
 }
 
-void freeTables(Database *database) {
-    Table *table;
+/**
+ * Free the tables in a Database structure
+ * @param database
+ * @return
+ */
+int freeTables(Database *database) {
+    Table *currentTable;
+    Table *tableToFree;
 
-    table = database->tableHead;
-    while (table->next != NULL) {
-        free(table->name);
+    if (!database)
+        return 1;
 
-        table = table->next;
-        // TODO: freeFields
-        //free(table);
+    currentTable = database->tableHead;
+
+    while (currentTable != NULL) {
+        tableToFree = currentTable->next;
+        database->tableHead = currentTable;
+        currentTable = currentTable->next;
+        freeFields(tableToFree);
+        free(tableToFree);
     }
+
+    database->tableHead = NULL;
+    free(currentTable);
+
+    return 0;
 }
 
 /**
- *
- * @param tableName
+ * Find a table in a Database structure
  * @param database
- * @return
+ * @param tableName
+ * @return database if success, NULL for error
+ */
+Table *findTable(Database *database, char *tableName) {
+    if (database == NULL)
+        return NULL;
+
+    Table *currentTable = database->tableHead;
+
+    while (currentTable != NULL)
+    {
+        if (strcmp(currentTable->name, tableName) == 0)
+            return currentTable;
+        currentTable = currentTable->next;
+    }
+
+    return NULL;
+}
+
+/**
+ * Free a table in a Database structure
+ * @param database
+ * @param table
+ * @return  0 if success, 1 for error
+ */
+int freeTable(Database *database, Table *table) {
+    Table *tableToFree;
+    Table *currentTable;
+
+    if (!database)
+        return 1;
+
+    currentTable = database->tableHead;
+
+    while (currentTable != NULL) {
+        if (currentTable->next == table) {
+            tableToFree = currentTable->next;
+            currentTable->next = currentTable->next->next;
+            free(tableToFree);
+        }
+        else if (currentTable == table) {
+            tableToFree = currentTable;
+            database->tableHead = currentTable->next;
+            free(tableToFree);
+        }
+        currentTable = currentTable->next;
+    }
+
+    return 0;
+}
+
+/**
+ * Create a table file
+ * @param database
+ * @param table
+ * @return 0 if success, 1 for error
  */
 int createTable(Database *database, Table *table) {
     char *path;
     FILE *file;
+
+    if (!database || !table)
+        return 1;
 
     path = getTablePath(database->name, table->name);
     if (!path)
@@ -72,7 +144,8 @@ int createTable(Database *database, Table *table) {
         return 1;
     }
 
-    addFields(database, table, file);
+    addFieldsInFile(database, table, file);
+
     fclose(file);
     free(path);
 
@@ -80,13 +153,17 @@ int createTable(Database *database, Table *table) {
 }
 
 /**
- *
- * @param databaseName
+ * Remove file 'table->name'
+ * Free the Table and fields
+ * @param database
  * @param table
- * @return 0 if success, 1 for error
+ * @return
  */
-int removeTable(Database *database, Table *table) {
+int dropTable(Database *database, Table *table) {
     char *path;
+
+    if (!database || !table)
+        return 1;
 
     path = getTablePath(database->name, table->name);
     if (!path)
@@ -100,7 +177,7 @@ int removeTable(Database *database, Table *table) {
         return 1;
     }
 
-    // TODO: freeTable(database, table) -> freeFields(table)
+    freeTable(database, findTable(database, table->name));
 
     free(path);
     return 0;

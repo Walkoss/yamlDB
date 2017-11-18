@@ -50,29 +50,22 @@ typedef struct SDatabase {
 } Database;
 
 Database *initDatabase(const char *databaseName);
-
 int createDatabase(Database *database);
-
 Database *useDatabase(Database *database);
-
 int dropDatabase(Database *database);
-
-void freeDatabase(Database *database);
-
+int freeDatabase(Database *database);
 char *getDatabasePath(const char *databaseName);
 
 void initTables(Database *database);
-
 int createTable(Database *database, Table *table);
-
-int removeTable(Database *database, Table *table);
-
-int addFields(Database *database, Table *table, FILE *file);
-
-void freeTables(Database *database);
-
+Table *findTable(Database *database, char *tableName);
+int dropTable(Database *database, Table *table);
+int freeTable(Database *database, Table *table);
+int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
-void initFields(Database *database, Table *table);
+int initFields(Database *database, Table *table);
+int addFieldsInFile(Database *database, Table *table, FILE *file);
+int freeFields(Table *table);
 
 #endif //YAMLDB_DATABASE_H

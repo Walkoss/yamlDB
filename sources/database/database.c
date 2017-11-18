@@ -9,9 +9,9 @@
 #include "database.h"
 
 /**
- * Init database
+ * Initialize a Database structure
  * @param databaseName
- * @return
+ * @return a Database
  */
 Database *initDatabase(const char *databaseName) {
     Database *database;
@@ -30,22 +30,31 @@ Database *initDatabase(const char *databaseName) {
 }
 
 /**
- * Free Database
+ * Free a Database with tables and fields
  * @param database
+ * @return 0 if success, 1 for error
  */
-void freeDatabase(Database *database) {
-    free(database->name);
+int freeDatabase(Database *database) {
+    if (!database)
+        return 1;
+
     database->isUsed = 0;
-    // TODO: freeTables
+    free(database->name);
+    freeTables(database);
     free(database);
+
+    return 0;
 }
 
 /**
- * Use Database
+ * Initialize a Database with tables and fields
  * @param database
- * @return
+ * @return a Database
  */
 Database *useDatabase(Database* database) {
+    if (!database)
+        return NULL;
+
     database->isUsed = 1;
     initTables(database);
 
@@ -53,16 +62,20 @@ Database *useDatabase(Database* database) {
 }
 
 /**
- * Create a database
- * @param databaseName
- * @return 0 if success, 1 for error
+ * Create directory 'database->name'
+ * @param database
+ * @return 0 if succes, 1 for error
  */
 int createDatabase(Database *database) {
     char *path;
 
+    if (!database)
+        return 1;
+
     path = getDatabasePath(database->name);
     if (!path)
         return 1;
+
     if (mkdir(path, 0777) == -1) {
         fprintf(stderr, "An error has occured when creating database '%s': "
                 "%s\n", database->name, strerror(errno));
@@ -81,7 +94,7 @@ int createDatabase(Database *database) {
  * @param sb
  * @param tflag
  * @param ftwbuf
- * @return
+ * @return 0 if success, 1 for error
  */
 int removeFile(const char *fpath,
                const struct stat *sb,
@@ -100,11 +113,15 @@ int removeFile(const char *fpath,
 
 /**
  * Remove directory 'databaseName' and its content
+ * Free the Database with tables and fields
  * @param databaseName
- * @return
+ * @return 0 if success, 1 for error
  */
 int dropDatabase(Database *database) {
     char *path;
+
+    if (!database)
+        return 1;
 
     path = getDatabasePath(database->name);
     if (!path)
@@ -117,6 +134,7 @@ int dropDatabase(Database *database) {
         return 1;
     }
 
+    freeDatabase(database);
     free(path);
     return 0;
 }
