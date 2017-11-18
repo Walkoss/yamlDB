@@ -39,7 +39,7 @@ int main() {
     useDatabase(database);
     createTable(database, table1);
     createTable(database, table2);
-    displayDatabase(database);
+    debugDatabase(database);
     dropTable(database, table1);
     dropTable(database, table2);
     dropDatabase(database);
