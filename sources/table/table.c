@@ -6,27 +6,37 @@
 **  Description: Functions for manage tables
 */
 
-#include "table.h"
+#include "../database/database.h"
 
 /**
- * Init tables structure
- * @param databaseName
- * @return
- *//*
-Table *initTables(Database *database) {
+ * Init Table
+ * @param database
+ */
+void initTables(Database *database) {
+    struct dirent *file;
+    DIR *dir;
     Table *table;
-    table = database->tableHead;
 
-    while (table->next != NULL) {
-        // TODO: remplir avec les fichiers .yml
-        table->name = "tableName";
-        // TODO: initFields
-        table->fieldHead = NULL;
+    dir = opendir(getDatabasePath(database->name));
+
+    while ((file = readdir(dir))) {
+        if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0) {
+            table = xmalloc(sizeof(Table), __func__);
+
+            file->d_name[strlen(file->d_name) - 4]  = '\0'; // To remove the ".yml"
+            table->name = file->d_name;
+            table->pk = 0;
+            table->fieldHead = NULL;
+            table->next = database->tableHead;
+
+            initFields(database, table);
+            database->tableHead = table;
+        }
     }
 
-    return table;
-}*/
-/*
+    closedir(dir);
+}
+
 void freeTables(Database *database) {
     Table *table;
 
@@ -38,14 +48,14 @@ void freeTables(Database *database) {
         // TODO: freeFields
         //free(table);
     }
-}*/
+}
 
 /**
  *
  * @param tableName
  * @param database
  * @return
- *//*
+ */
 int createTable(Database *database, Table *table) {
     char *path;
     FILE *file;
@@ -62,19 +72,19 @@ int createTable(Database *database, Table *table) {
         return 1;
     }
 
-    addFields(table, file);
+    addFields(database, table, file);
     fclose(file);
     free(path);
 
     return 0;
-}*/
+}
 
 /**
  *
  * @param databaseName
  * @param table
  * @return 0 if success, 1 for error
- *//*
+ */
 int removeTable(Database *database, Table *table) {
     char *path;
 
@@ -94,7 +104,7 @@ int removeTable(Database *database, Table *table) {
 
     free(path);
     return 0;
-}*/
+}
 
 /**
  * Based on RESOURCES_DIR and databaseName, this function returns an absolute
@@ -102,7 +112,7 @@ int removeTable(Database *database, Table *table) {
  * @param databaseName
  * @param tableName
  * @return
- *//*
+ */
 char *getTablePath(const char *databaseName, const char *tableName) {
     char *path;
 
@@ -118,4 +128,4 @@ char *getTablePath(const char *databaseName, const char *tableName) {
     strcat(path, ".yml");
 
     return path;
-}*/
+}

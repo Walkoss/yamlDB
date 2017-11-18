@@ -9,20 +9,4 @@
 #ifndef YAMLDB_FIELD_H
 #define YAMLDB_FIELD_H
 
-typedef enum EFieldType {
-    PK = 1,
-    INT,
-    FLOAT,
-    CHAR,
-    VARCHAR,
-} FieldType;
-
-typedef struct SField {
-    char *name;
-    FieldType type;
-    struct SField *next;
-} Field;
-
-//int addFields(Table *table, FILE *file);
-
 #endif //YAMLDB_FIELD_H

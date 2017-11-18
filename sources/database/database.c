@@ -47,8 +47,7 @@ void freeDatabase(Database *database) {
  */
 Database *useDatabase(Database* database) {
     database->isUsed = 1;
-    // TODO : Remplir les tables en fonction des fichiers yaml
-    database->tableHead = NULL;
+    initTables(database);
 
     return database;
 }

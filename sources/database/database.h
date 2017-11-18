@@ -5,7 +5,7 @@
 **
 **  Description: 
 */
-#include "../table/table.h"
+
 #ifndef YAMLDB_DATABASE_H
 #define YAMLDB_DATABASE_H
 
@@ -18,24 +18,61 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <ftw.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include "../utils/xmalloc.h"
+
+typedef enum EFieldType {
+    PK = 1,
+    INT,
+    FLOAT,
+    CHAR,
+    VARCHAR,
+} FieldType;
+
+typedef struct SField {
+    char *name;
+    FieldType type;
+    struct SField *next;
+} Field;
+
+typedef struct STable {
+    char *name;
+    unsigned int pk;
+    struct SField *fieldHead;
+    struct STable *next;
+} Table;
 
 typedef struct SDatabase {
     char *name;
     int isUsed;
-    Table *tableHead;
+    struct STable *tableHead;
 } Database;
 
 Database *initDatabase(const char *databaseName);
 
-Database *useDatabase(Database *);
+int createDatabase(Database *database);
 
-int createDatabase(Database *);
+Database *useDatabase(Database *database);
 
-int dropDatabase(Database *);
+int dropDatabase(Database *database);
 
-void freeDatabase(Database *);
+void freeDatabase(Database *database);
 
 char *getDatabasePath(const char *databaseName);
+
+void initTables(Database *database);
+
+int createTable(Database *database, Table *table);
+
+int removeTable(Database *database, Table *table);
+
+int addFields(Database *database, Table *table, FILE *file);
+
+void freeTables(Database *database);
+
+char *getTablePath(const char *databaseName, const char *tableName);
+
+void initFields(Database *database, Table *table);
 
 #endif //YAMLDB_DATABASE_H

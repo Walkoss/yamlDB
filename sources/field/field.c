@@ -6,26 +6,55 @@
 **  Description: 
 */
 
-#include "field.h"
+#include "../database/database.h"
+
+void initFields(Database *database, Table *table) {
+    Field *field;
+    FILE* file;
+    char *currentLine;
+    char *name;
+    int type;
+
+    currentLine = malloc(sizeof(char) * 200);
+    file = fopen(getTablePath(database->name, table->name), "r");
+
+    if (file != NULL) {
+        while (fgets(currentLine, 100, file) != NULL) {
+            field = xmalloc(sizeof(Field), __func__);
+            name = malloc(sizeof(char) * 100);
+            fscanf(file, "%s %d", name, &type);
+            name[strlen(name) - 1]  = '\0'; // To remove the ":"
+
+            field->name = name;
+            field->type = type;
+            field->next = table->fieldHead;
+            table->fieldHead = field;
+        }
+
+        fclose(file);
+    }
+}
 
 /**
  *
  * @param table
  * @param file
  * @return 0 if success
- *//*
-int addFields(Table *table, FILE *file) {
+ */
+int addFields(Database *database, Table *table, FILE *file) {
     Field *field;
 
     field = table->fieldHead;
-    fprintf(file, "fields:\n");
+    fprintf(file, "fields:");
 
     while (field != NULL) {
-        fprintf(file, "\t%s: %d\n", field->name, field->type);
+        fprintf(file, "\n\t%s: %d", field->name, field->type);
         field = field->next;
     }
 
-    // TODO: add node
+    table->next = database->tableHead;
+    initFields(database, table);
+    database->tableHead = table;
 
     return 0;
-}*/
+}
