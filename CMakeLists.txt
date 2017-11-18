@@ -10,6 +10,11 @@ set(SOURCE_FILES
         sources/utils/xmalloc.c
         sources/utils/xmalloc.h
         sources/table/table.c
-        sources/table/table.h)
+        sources/table/table.h
+        sources/token/token.c
+        sources/token/token.h
+        sources/lexer/lexer.c
+        sources/lexer/lexer.h
+        )
 
 add_executable(yamlDB ${SOURCE_FILES})
