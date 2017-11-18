@@ -8,7 +8,7 @@
 int displayDatabase(Database *database) {
     Table *currentTable;
 
-    if (database == NULL)
+    if (!database->name)
         return 1;
 
     currentTable = database->tableHead;
@@ -35,6 +35,7 @@ int displayDatabase(Database *database) {
 int main() {
     Database *database;
 
+    /* Tables de test */
     Table *table1 = xmalloc(sizeof(Table), __func__);
     Field *field1 = xmalloc(sizeof(Field), __func__);
     Field *field2 = xmalloc(sizeof(Field), __func__);
@@ -63,15 +64,19 @@ int main() {
     field3->name = "field3";
     field3->type = VARCHAR;
     field3->next = NULL;
+    /* Fin des tables de test */
 
     database = initDatabase("database");
-    //createDatabase(database);
+    createDatabase(database);
     useDatabase(database);
-    //createTable(database, table1);
-    //dropTable(database, table1);
-    //displayDatabase(database);
-    //dropDatabase(database);
-    //displayDatabase(database);
+    displayDatabase(database);
+    createTable(database, table1);
+    createTable(database, table2);
+    displayDatabase(database);
+    dropTable(database, table1);
+    dropTable(database, table2);
+    displayDatabase(database);
+    dropDatabase(database);
 
     return 0;
 }

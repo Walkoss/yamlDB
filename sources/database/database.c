@@ -39,8 +39,8 @@ int freeDatabase(Database *database) {
         return 1;
 
     database->isUsed = 0;
-    free(database->name);
     freeTables(database);
+    free(database->name);
     free(database);
 
     return 0;
@@ -52,11 +52,22 @@ int freeDatabase(Database *database) {
  * @return a Database
  */
 Database *useDatabase(Database* database) {
+    char *path;
+
     if (!database)
         return NULL;
 
-    database->isUsed = 1;
-    initTables(database);
+    path = getDatabasePath(database->name);
+
+    if (access(path, 0) == 0) { // If directory exist
+        if (database->isUsed == 0) {
+            database->isUsed = 1;
+            initTables(database);
+        }
+        else {
+            printf("Error : you are already using this database\n");
+        }
+    }
 
     return database;
 }

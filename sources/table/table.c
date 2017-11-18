@@ -136,17 +136,21 @@ int createTable(Database *database, Table *table) {
     if (!path)
         return 1;
 
-    file = fopen(path, "w+");
-    if (!file) {
-        fprintf(stderr, "An error has occured when creating table '%s': "
-                "%s\n", table->name, strerror(errno));
-        free(path);
-        return 1;
+    if (fopen(path,"r") == NULL) { // Si la table n'existe pas
+        file = fopen(path, "w+");
+        if (!file) {
+            fprintf(stderr, "An error has occured when creating table '%s': "
+                    "%s\n", table->name, strerror(errno));
+            free(path);
+            return 1;
+        }
+        addFieldsInFile(database, table, file);
+
+        fclose(file);
     }
-
-    addFieldsInFile(database, table, file);
-
-    fclose(file);
+    else {
+        printf("Error : Table already exist\n");
+    }
     free(path);
 
     return 0;

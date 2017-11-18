@@ -21,27 +21,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include "../utils/xmalloc.h"
-
-typedef enum EFieldType {
-    PK = 1,
-    INT,
-    FLOAT,
-    CHAR,
-    VARCHAR,
-} FieldType;
-
-typedef struct SField {
-    char *name;
-    FieldType type;
-    struct SField *next;
-} Field;
-
-typedef struct STable {
-    char *name;
-    unsigned int pk;
-    struct SField *fieldHead;
-    struct STable *next;
-} Table;
+#include "../table/table.h"
+#include "../field/field.h"
 
 typedef struct SDatabase {
     char *name;

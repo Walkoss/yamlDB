@@ -24,13 +24,13 @@ int initFields(Database *database, Table *table) {
     if (!database || !table)
         return 1;
 
-    currentLine = malloc(sizeof(char) * 200); // A CHANGER
+    currentLine = malloc(sizeof(char) * 200); // MOCHE MAIS PAS TROUVE MIEUX
     file = fopen(getTablePath(database->name, table->name), "r");
 
     if (file != NULL) {
-        while (fgets(currentLine, 100, file) != NULL) { // A CHANGER
+        while (fgets(currentLine, 100, file) != NULL) { // MOCHE MAIS PAS TROUVE MIEUX
             field = xmalloc(sizeof(Field), __func__);
-            name = malloc(sizeof(char) * 100); // A CHANGER
+            name = malloc(sizeof(char) * 100); // MOCHE MAIS PAS TROUVE MIEUX
             fscanf(file, "%s %d", name, &type);
             name[strlen(name) - 1]  = '\0'; // To remove the ":"
 

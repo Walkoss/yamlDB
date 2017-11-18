@@ -9,4 +9,13 @@
 #ifndef YAMLDB_TABLE_H
 #define YAMLDB_TABLE_H
 
+#include "../field/field.h"
+
+typedef struct STable {
+    char *name;
+    unsigned int pk;
+    struct SField *fieldHead;
+    struct STable *next;
+} Table;
+
 #endif //YAMLDB_TABLE_H
