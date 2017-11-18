@@ -17,22 +17,24 @@
 int initFields(Database *database, Table *table) {
     Field *field;
     FILE* file;
-    char *currentLine;
+    char currentLine[BUFFER_SIZE];
     char *name;
-    int type;
+    FieldType type;
 
     if (!database || !table)
         return 1;
 
-    currentLine = malloc(sizeof(char) * 200); // MOCHE MAIS PAS TROUVE MIEUX
     file = fopen(getTablePath(database->name, table->name), "r");
 
     if (file != NULL) {
-        while (fgets(currentLine, 100, file) != NULL) { // MOCHE MAIS PAS TROUVE MIEUX
+        while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
             field = xmalloc(sizeof(Field), __func__);
-            name = malloc(sizeof(char) * 100); // MOCHE MAIS PAS TROUVE MIEUX
+            name = xmalloc(sizeof(char) * 128, __func__);
+
+            if (!field || !name)
+                return 1;
+
             fscanf(file, "%s %d", name, &type);
-            name[strlen(name) - 1]  = '\0'; // To remove the ":"
 
             field->name = name;
             field->type = type;
@@ -41,6 +43,10 @@ int initFields(Database *database, Table *table) {
         }
 
         fclose(file);
+    } else {
+        fprintf(stderr, "An error has occured when init fields '%s': "
+                "%s\n", table->name, strerror(errno));
+        return 1;
     }
 
     return 0;
@@ -88,7 +94,7 @@ int freeFields(Table *table) {
 
     currentField = table->fieldHead;
 
-    while (currentField != NULL) {
+    while (currentField->next != NULL) {
         fieldToFree = currentField->next;
         table->fieldHead = currentField;
         currentField = currentField->next;

@@ -12,19 +12,29 @@
  * Initialize the tables in Database structure
  * @param database
  */
-void initTables(Database *database) {
+int initTables(Database *database) {
     struct dirent *file;
     DIR *dir;
     Table *table;
 
     dir = opendir(getDatabasePath(database->name));
 
+    if (!dir) {
+        fprintf(stderr, "An error has occured when opening database '%s': "
+                "%s\n", database->name, strerror(errno));
+        return 1;
+    }
+
     while ((file = readdir(dir))) {
         if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0) {
             table = xmalloc(sizeof(Table), __func__);
 
+            if (!table)
+                return 1;
+
             file->d_name[strlen(file->d_name) - 4]  = '\0'; // To remove the ".yml"
             table->name = file->d_name;
+            //TODO : vérifier l'id le plus grand dans les données et rajouter +1
             table->pk = 0;
             table->fieldHead = NULL;
             table->next = database->tableHead;
@@ -35,6 +45,8 @@ void initTables(Database *database) {
     }
 
     closedir(dir);
+
+    return 0;
 }
 
 /**
@@ -42,6 +54,7 @@ void initTables(Database *database) {
  * @param database
  * @return
  */
+// TODO: Vérifier les fonctions free
 int freeTables(Database *database) {
     Table *currentTable;
     Table *tableToFree;
@@ -72,10 +85,12 @@ int freeTables(Database *database) {
  * @return database if success, NULL for error
  */
 Table *findTable(Database *database, char *tableName) {
+    Table *currentTable;
+
     if (database == NULL)
         return NULL;
 
-    Table *currentTable = database->tableHead;
+    currentTable =  database->tableHead;
 
     while (currentTable != NULL)
     {
@@ -93,6 +108,7 @@ Table *findTable(Database *database, char *tableName) {
  * @param table
  * @return  0 if success, 1 for error
  */
+// TODO: Vérifier les fonctions free
 int freeTable(Database *database, Table *table) {
     Table *tableToFree;
     Table *currentTable;
@@ -136,7 +152,7 @@ int createTable(Database *database, Table *table) {
     if (!path)
         return 1;
 
-    if (fopen(path,"r") == NULL) { // Si la table n'existe pas
+    if (fopen(path,"w") == NULL) { // Si la table n'existe pas
         file = fopen(path, "w+");
         if (!file) {
             fprintf(stderr, "An error has occured when creating table '%s': "
@@ -147,9 +163,9 @@ int createTable(Database *database, Table *table) {
         addFieldsInFile(database, table, file);
 
         fclose(file);
-    }
-    else {
-        printf("Error : Table already exist\n");
+    } else {
+        fprintf(stderr, "The table already exist '%s': "
+                "%s\n", table->name, strerror(errno));
     }
     free(path);
 

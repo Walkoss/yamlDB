@@ -63,10 +63,11 @@ Database *useDatabase(Database* database) {
         if (database->isUsed == 0) {
             database->isUsed = 1;
             initTables(database);
+        } else {
+            fprintf(stderr, "Error : you are already using this database\n");
         }
-        else {
-            printf("Error : you are already using this database\n");
-        }
+    } else {
+        fprintf(stderr, "Error : the directory doesn't exist\n");
     }
 
     return database;
@@ -166,4 +167,36 @@ char *getDatabasePath(const char *databaseName) {
     strcat(path, databaseName);
 
     return path;
+}
+
+/**
+ * display the database, tables and fields to debug
+ * @param database
+ * @return 0 if success, 1 for error
+ */
+int debugDatabase(Database *database) {
+    Table *currentTable;
+
+    if (!database->name)
+        return 1;
+
+    currentTable = database->tableHead;
+
+    if (strcmp(database->name, "") != 0)
+        printf("%d %s:\n", database->isUsed, database->name);
+
+    while (currentTable != NULL) {
+        printf("\t%s:\n ", currentTable->name);
+
+        Field *currentField = currentTable->fieldHead;
+        while (currentField != NULL) {
+            printf("\t\t%s:%d\n", currentField->name, currentField->type);
+            currentField = currentField->next;
+        }
+
+        printf("\n");
+        currentTable = currentTable->next;
+    }
+
+    return 0;
 }

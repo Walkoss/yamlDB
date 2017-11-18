@@ -11,6 +11,7 @@
 
 #define RESOURCES_DIR "resources/"
 #define NOPENFD 20
+#define BUFFER_SIZE 1024
 
 #include <errno.h>
 #include <stdio.h>
@@ -36,8 +37,9 @@ Database *useDatabase(Database *database);
 int dropDatabase(Database *database);
 int freeDatabase(Database *database);
 char *getDatabasePath(const char *databaseName);
+int debugDatabase(Database *database);
 
-void initTables(Database *database);
+int initTables(Database *database);
 int createTable(Database *database, Table *table);
 Table *findTable(Database *database, char *tableName);
 int dropTable(Database *database, Table *table);
