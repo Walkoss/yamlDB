@@ -190,7 +190,7 @@ int debugDatabase(Database *database) {
 
         Field *currentField = currentTable->fieldHead;
         while (currentField != NULL) {
-            printf("\t\t%s:%d\n", currentField->name, currentField->type);
+            printf("\t\t%s: %d\n", currentField->name, currentField->type);
             currentField = currentField->next;
         }
 

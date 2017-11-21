@@ -152,7 +152,9 @@ int createTable(Database *database, Table *table) {
     if (!path)
         return 1;
 
-    if (fopen(path,"w") == NULL) { // Si la table n'existe pas
+    file = fopen(path, "r");
+
+    if (!file) { // Si la table n'existe pas
         file = fopen(path, "w+");
         if (!file) {
             fprintf(stderr, "An error has occured when creating table '%s': "
@@ -166,6 +168,7 @@ int createTable(Database *database, Table *table) {
     } else {
         fprintf(stderr, "The table already exist '%s': "
                 "%s\n", table->name, strerror(errno));
+        fclose(file);
     }
     free(path);
 

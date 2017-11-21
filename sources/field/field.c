@@ -35,11 +35,14 @@ int initFields(Database *database, Table *table) {
                 return 1;
 
             fscanf(file, "%s %d", name, &type);
+            name[strlen(name) - 1]  = '\0'; // To remove the ":"
 
-            field->name = name;
-            field->type = type;
-            field->next = table->fieldHead;
-            table->fieldHead = field;
+            if (strcmp(name, "") != 0) {
+                field->name = name;
+                field->type = type;
+                field->next = table->fieldHead;
+                table->fieldHead = field;
+            }
         }
 
         fclose(file);
@@ -66,10 +69,10 @@ int addFieldsInFile(Database *database, Table *table, FILE *file) {
         return 1;
 
     field = table->fieldHead;
-    fprintf(file, "fields:");
+    fprintf(file, "fields:\n");
 
     while (field != NULL) {
-        fprintf(file, "\n\t%s: %d", field->name, field->type);
+        fprintf(file, "\t%s: %d\n", field->name, field->type);
         field = field->next;
     }
 

@@ -40,9 +40,9 @@ int main() {
     createTable(database, table1);
     createTable(database, table2);
     debugDatabase(database);
-    dropTable(database, table1);
-    dropTable(database, table2);
-    dropDatabase(database);
+    //dropTable(database, table1);
+    //dropTable(database, table2);
+    //dropDatabase(database);
 
     return 0;
 }
