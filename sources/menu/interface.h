@@ -15,6 +15,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "../utils/xmalloc.h"
+#include "../database/database.h"
+#include "../table/table.h"
 
 int userInterface();
 
