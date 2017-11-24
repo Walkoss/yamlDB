@@ -9,7 +9,7 @@
 #ifndef YAMLDB_FIELD_H
 #define YAMLDB_FIELD_H
 
-#define FILE_NAME_SIZE 128
+#define MAX_FIELD_NAME_SIZE 128
 
 typedef enum EFieldType {
     PK = 1,

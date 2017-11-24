@@ -29,7 +29,7 @@ int initFields(Database *database, Table *table) {
     if (file != NULL) {
         while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
             field = xmalloc(sizeof(Field), __func__);
-            name = xmalloc(sizeof(char) * FILE_NAME_SIZE, __func__);
+            name = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
 
             if (!field || !name)
                 return 1;
