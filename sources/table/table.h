@@ -5,11 +5,17 @@
 **
 **  Description: Header file for table, for mangage tables
 */
+
 #ifndef YAMLDB_TABLE_H
 #define YAMLDB_TABLE_H
 
-#include "../utils/xmalloc.h"
+#include "../field/field.h"
 
-int removeTable(const char *databaseName, const char *tableName);
+typedef struct STable {
+    char *name;
+    unsigned int pk;
+    struct SField *fieldHead;
+    struct STable *next;
+} Table;
 
 #endif //YAMLDB_TABLE_H
