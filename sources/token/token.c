@@ -8,60 +8,39 @@
 
 #include "token.h"
 
+// TODO: Try to not set global variable
+TokenHash tokens[] = {
+        {.token = T_ILLEGAL, .value = "illegal"},
+        {.token = T_EOS, .value = "end-of-source"},
+        {.token = T_LIT_IDENTIFIER, .value = "identifier"},
+        {.token = T_LIT_INT, .value = "int"},
+        {.token = T_LIT_FLOAT, .value = "float"},
+        {.token = T_LIT_STR_SIMPLE_QUOTE, .value = "simple-quote"},
+        {.token = T_LIT_STR_DOUBLE_QUOTE, .value = "double-quote"},
+        {.token = T_LIT_STR_BACK_QUOTE, .value = "back-quote"},
+        {.token = T_OP_LPAREN, .value = "left-parenthesis"},
+        {.token = T_OP_RPAREN, .value = "right-parenthesis"},
+        {.token = T_OP_SEMICOLON, .value = "semicolon"},
+        {.token = T_OP_COMMA, .value = "comma"},
+        {.token = T_OP_ASSIGN, .value = "operator-assign"},
+        {.token = T_OP_EQUALS, .value = "operator-equal"},
+        {.token = T_KW_CREATE, .value = "create"},
+        {.token = T_KW_DROP, .value = "drop"},
+        {.token = T_KW_USE, .value = "use"},
+        {.token = T_KW_DATABASE, .value = "database"},
+        {.token = T_KW_TABLE, .value = "table"},
+        {.value = "NULL"}
+};
+
 char *tokenTypeAsString(TokenType type) {
-    Token tokens[] = {
-            {.type = ILLEGAL, .value.asString = "illegal"},
-            {.type = EOS, .value.asString = "end-of-source"},
-            {.type = NEWLINE, .value.asString = "newline"},
-            {.type = IDENTIFIER, .value.asString = "identifier"},
-            {.type = INT, .value.asString = "int"},
-            {.type = FLOAT, .value.asString = "float"},
-            {.type = STRING_SIMPLE_QUOTE, .value.asString = "simple-quote"},
-            {.type = STRING_DOUBLE_QUOTE, .value.asString = "double-quote"},
-            {.type = STRING_BACK_QUOTE, .value.asString = "back-quote"},
-            {.type = LPAREN, .value.asString = "left-parenthesis"},
-            {.type = RPAREN, .value.asString = "right-parenthesis"},
-            {.type = SEMICOLON, .value.asString = "semicolon"},
-            {.type = COMMA, .value.asString = "comma"},
-            {.type = OP_ASSIGN, .value.asString = "operator-assign"},
-            {.type = OP_EQ, .value.asString = "operator-equal"},
-            {.type = CREATE, .value.asString = "create"},
-            {.type = DROP, .value.asString = "drop"},
-            {.type = USE, .value.asString = "use"},
-            {.type = DATABASE, .value.asString = "database"},
-            {.type = TABLE, .value.asString = "table"},
-            {.value.asString = NULL},
-    };
     int i;
 
     i = 0;
-    while (tokens[i].value.asString != NULL) {
-        if (tokens[i].type == type) {
-            return tokens[i].value.asString;
+    while (strcmp(tokens[i].value, "NULL") != 0) {
+        if (tokens[i].token == type) {
+            return tokens[i].value;
         }
         i++;
     }
-    return "unknown type";
-}
-
-void tokenInspect(Token token) {
-    switch (token.type) {
-        case STRING_SIMPLE_QUOTE:
-            printf("string: '%s'\n", token.value.asString);
-            break;
-        case STRING_DOUBLE_QUOTE:
-            printf("string: \"%s\"\n", token.value.asString);
-            break;
-        case STRING_BACK_QUOTE:
-            printf("string: `%s`\n", token.value.asString);
-            break;
-        case IDENTIFIER:
-            printf("identifier: %s\n", token.value.asString);
-            break;
-        case INT:
-            printf("int: %d\n", token.value.asInt);
-            break;
-        default:
-            printf("%s\n", tokenTypeAsString(token.type));
-    }
+    return "illegal";
 }

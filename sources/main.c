@@ -1,20 +1,19 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "lexer/lexer.h"
+#include "parser/parser.h"
 
-int main() {
+int main(int argc, char **argv) {
     Lexer *lexer;
+    TokenType tok;
 
-    lexer = malloc(sizeof(lexer));
-    lexerInit(lexer, stdin);
-
-    while (lexerNext(lexer)) {
-        tokenInspect(lexer->token);
-    }
-
-    if (lexer->token.type == ILLEGAL) {
-        fprintf(stderr, "SyntaxError %s on line %d", lexer->error,
-                lexer->linenumber);
+    if (argc >= 2) {
+        lexer = lexerInit(argv[1]);
+        while ((tok = getToken(lexer)) != T_EOS && tok != T_ILLEGAL) {
+            printf("TokenType: %s\n", tokenTypeAsString(tok));
+            tokenInspect(lexer);
+        }
+        if (tok == T_ILLEGAL) {
+            printf("Illegal\n");
+        }
+        lexerFree(lexer);
     }
     return 0;
 }

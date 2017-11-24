@@ -9,26 +9,33 @@
 #ifndef YAMLDB_LEXER_H
 #define YAMLDB_LEXER_H
 
-#include <stdio.h>
-#include <memory.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "../token/token.h"
 #include "../utils/xmalloc.h"
-
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 1024
-#endif
+#include "../utils/to_lower.h"
+#include "../hash_map/hash_map.h"
+#include "file/file.h"
 
 typedef struct {
-    char *error;
-    int stash;
-    int linenumber;
-    FILE *stream;
-    Token token;
+    char *error;                    // string containing an error if tok == T_ILLEGAL
+    int cur;                        // current character in buffer
+    size_t lineNb;                  // line number in buffer
+    size_t curPos;                  // current character position in line
+    TokenType tok;                  // current TokenType (INT, FLOAT, etc..)
+    char *value;                    // value parsed in buffer (INT, STR, FLOAT)
+    char *buffer;                   // string to parse
+    size_t cursor;                  // cursor in buffer (index)
+    size_t bufferSize;              // size of buffer
+    HashMap *keywordsHashTable;     // hash map containing all the keywords
 } Lexer;
 
-void lexerInit(Lexer *lexer, FILE *stream);
+Lexer *lexerInit(char *buffer);
 
-int lexerNext(Lexer *lexer);
+void lexerFree(Lexer *lexer);
+
+TokenType getToken(Lexer *lexer);
+
+void tokenInspect(Lexer *lexer);
 
 #endif //YAMLDB_LEXER_H

@@ -9,46 +9,43 @@
 #ifndef YAMLDB_TOKEN_H
 #define YAMLDB_TOKEN_H
 
-#include <stdio.h>
+#include <string.h>
 
+#define NUM_KW_TOKENS 5
+#define MAX_LEXICAL_VALUE 256
 
 typedef enum {
-    ILLEGAL = -1,
-    EOS, // \0
-    NEWLINE, // \n
-    IDENTIFIER, // is_admin
-    INT, // 44
-    FLOAT, // 3.44
-    STRING_SIMPLE_QUOTE, // 'test'
-    STRING_DOUBLE_QUOTE, // "test"
-    STRING_BACK_QUOTE, // `test`
-    LPAREN, // (
-    RPAREN, // )
-    SEMICOLON, // ;
-    COMMA, // ,
-    OP_ASSIGN, // =
-    OP_EQ, // ==
+    T_ILLEGAL = -1,
+    T_EOS = 0, // \0
+    T_LIT_IDENTIFIER, // is_admin
+    T_LIT_INT, // 44
+    T_LIT_FLOAT, // 3.44
+    T_LIT_STR_SIMPLE_QUOTE, // 'test'
+    T_LIT_STR_DOUBLE_QUOTE, // "test"
+    T_LIT_STR_BACK_QUOTE, // `test`
+    T_OP_LPAREN, // (
+    T_OP_RPAREN, // )
+    T_OP_SEMICOLON, // ;
+    T_OP_COMMA, // ,
+    T_OP_ASSIGN, // =
+    T_OP_EQUALS, // ==
 
-    // Database keywords
-    CREATE,
-    DROP,
-    USE,
-    DATABASE,
-    TABLE
+    //  Database keywords
+    // TODO: add types, VARCHAR, INT and so on
+
+    T_KW_CREATE,
+    T_KW_DROP,
+    T_KW_USE,
+    T_KW_DATABASE,
+    T_KW_TABLE,
+    T_KW_INSERT
 } TokenType;
 
 typedef struct {
-    int len;
-    TokenType type;
-    struct {
-        float asFloat;
-        int asInt;
-        char *asString;
-    } value;
-} Token;
+    TokenType token;
+    char value[MAX_LEXICAL_VALUE];
+} TokenHash;
 
-char *tokenTypeAsString(TokenType);
-
-void tokenInspect(Token);
+char *tokenTypeAsString(TokenType tokenType);
 
 #endif //YAMLDB_TOKEN_H

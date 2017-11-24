@@ -15,6 +15,13 @@ set(SOURCE_FILES
         sources/token/token.h
         sources/lexer/lexer.c
         sources/lexer/lexer.h
-        )
+        sources/hash_map/hash_map.c
+        sources/hash_map/hash_map.h
+        sources/lexer/file/file.c
+        sources/lexer/file/file.h
+        sources/parser/parser.c
+        sources/parser/parser.h
+        sources/utils/to_lower.c
+        sources/utils/to_lower.h)
 
 add_executable(yamlDB ${SOURCE_FILES})
