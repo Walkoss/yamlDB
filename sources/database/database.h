@@ -48,7 +48,7 @@ int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
 int initFields(Database *database, Table *table);
-int addFieldsInFile(Database *database, Table *table, FILE *file);
+int addFieldsInFile(Database *database, Table *table);
 int freeFields(Table *table);
 
 #endif //YAMLDB_DATABASE_H

@@ -16,7 +16,7 @@
  */
 int initFields(Database *database, Table *table) {
     Field *field;
-    FILE* file;
+    FILE *file;
     char currentLine[BUFFER_SIZE];
     char *name;
     FieldType type;
@@ -29,7 +29,7 @@ int initFields(Database *database, Table *table) {
     if (file != NULL) {
         while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
             field = xmalloc(sizeof(Field), __func__);
-            name = xmalloc(sizeof(char) * 128, __func__);
+            name = xmalloc(sizeof(char) * FILE_NAME_SIZE, __func__);
 
             if (!field || !name)
                 return 1;
@@ -37,7 +37,10 @@ int initFields(Database *database, Table *table) {
             fscanf(file, "%s %d", name, &type);
             name[strlen(name) - 1]  = '\0'; // To remove the ":"
 
-            if (strcmp(name, "") != 0) {
+            if (strcmp(name, "data") == 0) {
+                break;
+            }
+            else if (strcmp(name, "") != 0) {
                 field->name = name;
                 field->type = type;
                 field->next = table->fieldHead;
@@ -62,10 +65,22 @@ int initFields(Database *database, Table *table) {
  * @param file
  * @return 0 if success, 1 for error
  */
-int addFieldsInFile(Database *database, Table *table, FILE *file) {
+int addFieldsInFile(Database *database, Table *table) {
     Field *field;
+    FILE *file;
+    char *path;
 
-    if (!database || !table || !file)
+    path = getTablePath(database->name, table->name);
+
+    file = fopen(path, "w+");
+    if (!file) {
+        fprintf(stderr, "An error has occured when creating table '%s': "
+                "%s\n", table->name, strerror(errno));
+        free(path);
+        return 1;
+    }
+
+    if (!path || !database || !table || !file)
         return 1;
 
     field = table->fieldHead;
@@ -76,9 +91,7 @@ int addFieldsInFile(Database *database, Table *table, FILE *file) {
         field = field->next;
     }
 
-    table->next = database->tableHead;
     initFields(database, table);
-    database->tableHead = table;
 
     return 0;
 }

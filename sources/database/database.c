@@ -34,6 +34,7 @@ Database *initDatabase(const char *databaseName) {
  * @param database
  * @return 0 if success, 1 for error
  */
+// TODO: Vérifier les fonctions free
 int freeDatabase(Database *database) {
     if (!database)
         return 1;
@@ -51,13 +52,15 @@ int freeDatabase(Database *database) {
  * @param database
  * @return a Database
  */
-Database *useDatabase(Database* database) {
+Database *useDatabase(Database *database) {
     char *path;
 
     if (!database)
         return NULL;
 
     path = getDatabasePath(database->name);
+    if (!path)
+        return NULL;
 
     if (access(path, 0) == 0) { // If directory exist
         if (database->isUsed == 0) {
@@ -67,7 +70,8 @@ Database *useDatabase(Database* database) {
             fprintf(stderr, "Error : you are already using this database\n");
         }
     } else {
-        fprintf(stderr, "Error : the directory doesn't exist\n");
+        fprintf(stderr, "An error has occured when opening database '%s': "
+                "%s\n", database->name, strerror(errno));
     }
 
     return database;

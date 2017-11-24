@@ -18,7 +18,6 @@ int initTables(Database *database) {
     Table *table;
 
     dir = opendir(getDatabasePath(database->name));
-
     if (!dir) {
         fprintf(stderr, "An error has occured when opening database '%s': "
                 "%s\n", database->name, strerror(errno));
@@ -54,7 +53,6 @@ int initTables(Database *database) {
  * @param database
  * @return
  */
-// TODO: Vérifier les fonctions free
 int freeTables(Database *database) {
     Table *currentTable;
     Table *tableToFree;
@@ -92,8 +90,7 @@ Table *findTable(Database *database, char *tableName) {
 
     currentTable =  database->tableHead;
 
-    while (currentTable != NULL)
-    {
+    while (currentTable != NULL) {
         if (strcmp(currentTable->name, tableName) == 0)
             return currentTable;
         currentTable = currentTable->next;
@@ -108,7 +105,6 @@ Table *findTable(Database *database, char *tableName) {
  * @param table
  * @return  0 if success, 1 for error
  */
-// TODO: Vérifier les fonctions free
 int freeTable(Database *database, Table *table) {
     Table *tableToFree;
     Table *currentTable;
@@ -143,7 +139,6 @@ int freeTable(Database *database, Table *table) {
  */
 int createTable(Database *database, Table *table) {
     char *path;
-    FILE *file;
 
     if (!database || !table)
         return 1;
@@ -152,23 +147,12 @@ int createTable(Database *database, Table *table) {
     if (!path)
         return 1;
 
-    file = fopen(path, "r");
-
-    if (!file) { // Si la table n'existe pas
-        file = fopen(path, "w+");
-        if (!file) {
-            fprintf(stderr, "An error has occured when creating table '%s': "
-                    "%s\n", table->name, strerror(errno));
-            free(path);
-            return 1;
-        }
-        addFieldsInFile(database, table, file);
-
-        fclose(file);
+    if (access(path, 0) != 0) { // If table doesn't exist
+        table->next = database->tableHead;
+        addFieldsInFile(database, table);
+        database->tableHead = table;
     } else {
-        fprintf(stderr, "The table already exist '%s': "
-                "%s\n", table->name, strerror(errno));
-        fclose(file);
+        fprintf(stderr, "The table '%s' already exist\n", table->name);
     }
     free(path);
 
@@ -201,8 +185,8 @@ int dropTable(Database *database, Table *table) {
     }
 
     freeTable(database, findTable(database, table->name));
-
     free(path);
+
     return 0;
 }
 
