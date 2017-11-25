@@ -15,11 +15,11 @@
  * @return 0 if success, 1 for error
  */
 int initFields(Database *database, Table *table) {
-    Field *field;
     FILE *file;
+    Field *field;
+    FieldType type;
     char currentLine[BUFFER_SIZE];
     char *name;
-    FieldType type;
 
     if (!database || !table)
         return 1;
@@ -70,7 +70,12 @@ int addFieldsInFile(Database *database, Table *table) {
     FILE *file;
     char *path;
 
+    if (!database || !table)
+        return 1;
+
     path = getTablePath(database->name, table->name);
+    if (!path)
+        return 1;
 
     file = fopen(path, "w+");
     if (!file) {
@@ -80,9 +85,6 @@ int addFieldsInFile(Database *database, Table *table) {
         return 1;
     }
 
-    if (!path || !database || !table || !file)
-        return 1;
-
     field = table->fieldHead;
     fprintf(file, "fields:\n");
 
@@ -91,6 +93,7 @@ int addFieldsInFile(Database *database, Table *table) {
         field = field->next;
     }
 
+    fprintf(file, "data:\n");
     initFields(database, table);
 
     return 0;
