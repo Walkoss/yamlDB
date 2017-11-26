@@ -11,7 +11,7 @@
 
 #include <string.h>
 
-#define NUM_KW_TOKENS 5
+#define NUM_OP_KW_TOKENS 11
 #define MAX_LEXICAL_VALUE 256
 
 typedef enum {
@@ -27,8 +27,7 @@ typedef enum {
     T_OP_RPAREN, // )
     T_OP_SEMICOLON, // ;
     T_OP_COMMA, // ,
-    T_OP_ASSIGN, // =
-    T_OP_EQUALS, // ==
+    T_OP_EQUAL, // =
 
     //  Database keywords
     // TODO: add types, VARCHAR, INT and so on
@@ -37,8 +36,7 @@ typedef enum {
     T_KW_DROP,
     T_KW_USE,
     T_KW_DATABASE,
-    T_KW_TABLE,
-    T_KW_INSERT
+    T_KW_TABLE
 } TokenType;
 
 typedef struct {

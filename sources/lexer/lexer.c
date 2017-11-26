@@ -11,13 +11,13 @@
 void lexerMakeTokenLiteral(Lexer *lexer, char *keyword, TokenType type) {
     TokenHash *tokenHash;
 
-    tokenHash = hashMapGet(lexer->keywordsHashTable, keyword);
+    tokenHash = hashMapGet(lexer->tokensHashTable, keyword);
     if (tokenHash == NULL) {
         tokenHash = xmalloc(sizeof(TokenHash), __func__);
         if (tokenHash != NULL) {
             strcpy(tokenHash->value, keyword);
             tokenHash->token = type;
-            hashMapPut(lexer->keywordsHashTable, keyword, tokenHash);
+            hashMapPut(lexer->tokensHashTable, keyword, tokenHash);
         }
     } else {
         lexer->tok = tokenHash->token;
@@ -25,7 +25,15 @@ void lexerMakeTokenLiteral(Lexer *lexer, char *keyword, TokenType type) {
     }
 }
 
-void lexerInitKeywords(Lexer *lexer) {
+void lexerInitTokensHashTable(Lexer *lexer) {
+    // Operators
+    lexerMakeTokenLiteral(lexer, "(", T_OP_LPAREN);
+    lexerMakeTokenLiteral(lexer, ")", T_OP_RPAREN);
+    lexerMakeTokenLiteral(lexer, ";", T_OP_SEMICOLON);
+    lexerMakeTokenLiteral(lexer, ",", T_OP_COMMA);
+    lexerMakeTokenLiteral(lexer, "=", T_OP_EQUAL);
+
+    // Keywords
     lexerMakeTokenLiteral(lexer, "create", T_KW_CREATE);
     lexerMakeTokenLiteral(lexer, "drop", T_KW_DROP);
     lexerMakeTokenLiteral(lexer, "use", T_KW_USE);
@@ -47,8 +55,8 @@ Lexer *lexerInit(char *buffer) {
         lexer->buffer = buffer;
         lexer->cursor = 0;
         lexer->bufferSize = strlen(buffer);
-        lexer->keywordsHashTable = hashMapInit(NUM_KW_TOKENS);
-        lexerInitKeywords(lexer);
+        lexer->tokensHashTable = hashMapInit(NUM_OP_KW_TOKENS);
+        lexerInitTokensHashTable(lexer);
     }
 
     return lexer;
@@ -62,7 +70,7 @@ void lexerFree(Lexer *lexer) {
         if (lexer->error != NULL) {
             free(lexer->error);
         }
-        hashMapFree(lexer->keywordsHashTable);
+        hashMapFree(lexer->tokensHashTable);
         free(lexer);
     }
 }
@@ -182,7 +190,7 @@ TokenType readIdentifierOrKeyword(Lexer *lexer) {
 
     bufferToLower = strdup(buffer);
     strToLower(bufferToLower);
-    tokenType = (TokenType *) hashMapGet(lexer->keywordsHashTable,
+    tokenType = (TokenType *) hashMapGet(lexer->tokensHashTable,
                                          bufferToLower);
     if (tokenType) {
         return *tokenType;
@@ -222,6 +230,36 @@ TokenType readNumber(Lexer *lexer) {
     return tokenType;
 }
 
+int lexerIsOperator(Lexer *lexer) {
+    char operator[2];
+    int currentCharacter;
+    HashMapNode *node;
+
+    currentCharacter = lexerPeekCharacter(lexer);
+    operator[0] = (char) currentCharacter;
+    operator[1] = '\0';
+    node = hashMapGet(lexer->tokensHashTable, operator);
+    if (node == NULL) {
+        return 0;
+    }
+    return 1;
+}
+
+TokenType readOperator(Lexer *lexer) {
+    char operator[2];
+    TokenType *tokenType;
+
+    lexerNextCharacter(lexer);
+    operator[0] = (char) lexer->cur;
+    operator[1] = '\0';
+    tokenType = hashMapGet(lexer->tokensHashTable, operator);
+    if (tokenType == NULL) {
+        sprintf(lexer->error, "Unexpected operator '%c'", lexer->cur);
+        return T_ILLEGAL;
+    }
+    return *tokenType;
+}
+
 TokenType getToken(Lexer *lexer) {
     int currentCharacter;
 
@@ -232,6 +270,7 @@ TokenType getToken(Lexer *lexer) {
         return lexerSetTokenType(lexer, T_EOS);
     }
 
+    printf("\n");
     currentCharacter = lexerPeekCharacter(lexer);
 
     // TODO: refactor this using function pointers maybe?
@@ -245,8 +284,10 @@ TokenType getToken(Lexer *lexer) {
         return lexerSetTokenType(lexer, readIdentifierOrKeyword(lexer));
     } else if (isdigit(currentCharacter) || currentCharacter == '.') {
         return lexerSetTokenType(lexer, readNumber(lexer));
+    } else if (lexerIsOperator(lexer)) {
+        return lexerSetTokenType(lexer, readOperator(lexer));
     }
-    // TODO: Handle operator
-    sprintf(lexer->error, "Unexpected character (%c)", currentCharacter);
+    // TODO handle special char '\n \t'
+    sprintf(lexer->error, "Unexpected character '%c'", currentCharacter);
     return lexerSetTokenType(lexer, T_ILLEGAL);
 }

@@ -26,7 +26,8 @@ typedef struct {
     char *buffer;                   // string to parse
     size_t cursor;                  // cursor in buffer (index)
     size_t bufferSize;              // size of buffer
-    HashMap *keywordsHashTable;     // hash map containing all the keywords
+    HashMap *tokensHashTable;       // hash map containing all the operators
+    // and keywords token
 } Lexer;
 
 Lexer *lexerInit(char *buffer);
