@@ -24,6 +24,7 @@
 #include "../utils/xmalloc.h"
 #include "../table/table.h"
 #include "../field/field.h"
+#include "../data/data.h"
 
 typedef struct SDatabase {
     char *name;
@@ -50,5 +51,7 @@ char *getTablePath(const char *databaseName, const char *tableName);
 int initFields(Database *database, Table *table);
 int addFieldsInFile(Database *database, Table *table);
 int freeFields(Table *table);
+
+int addData(Database *database, Table *table, Data *data);
 
 #endif //YAMLDB_DATABASE_H
