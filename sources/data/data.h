@@ -17,4 +17,9 @@ typedef struct SDATA {
     struct SDATA *next;
 } Data;
 
+typedef struct SCONDITION {
+    char *key;
+    char *value;
+} Condition;
+
 #endif //YAMLDB_DATA_H

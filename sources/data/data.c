@@ -47,3 +47,47 @@ int addData(Database *database, Table *table, Data *data) {
 
     return 0;
 }
+
+int removeData(Database *database, Table *table, Condition *condition) {
+    FILE *file;
+    char *path;
+    char currentLine[BUFFER_SIZE];
+    char *key;
+    char *value;
+    int isData;
+
+    if (!database || !table || !condition)
+        return 1;
+
+    path = getTablePath(database->name, table->name);
+    if (!path)
+        return 1;
+
+    file = fopen(path, "r+");
+    if (!file) {
+        fprintf(stderr, "An error has occured when adding data in table '%s': "
+                "%s\n", table->name, strerror(errno));
+        free(path);
+        return 1;
+    }
+
+    isData = 0;
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key)
+            return 1;
+
+        fscanf(file, "%s %s", key, value);
+        key[strlen(key) - 1]  = '\0'; // To remove the ":"
+        if (isData == 1 && strcmp(key, condition->key) == 0 && strcmp(value, condition->value) == 0) {
+            printf("ok\n");
+        }
+        if (strcmp(key, "data") == 0) {
+            isData = 1;
+        }
+    }
+
+    return 0;
+}
