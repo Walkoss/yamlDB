@@ -8,13 +8,10 @@
 #ifndef YAMLDB_DATA_H
 #define YAMLDB_DATA_H
 
-typedef struct SDATA {
-    int iValue;
-    float fValue;
-    char cValue;
-    char *sValue;
+typedef struct SData {
+    void *value;
     struct SField *field;
-    struct SDATA *next;
+    struct SData *next;
 } Data;
 
 #endif //YAMLDB_DATA_H
