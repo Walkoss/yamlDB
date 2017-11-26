@@ -17,8 +17,6 @@ set(SOURCE_FILES
         sources/lexer/lexer.h
         sources/hash_map/hash_map.c
         sources/hash_map/hash_map.h
-        sources/lexer/file/file.c
-        sources/lexer/file/file.h
         sources/parser/parser.c
         sources/parser/parser.h
         sources/utils/to_lower.c

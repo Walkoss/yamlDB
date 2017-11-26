@@ -15,7 +15,6 @@
 #include "../utils/xmalloc.h"
 #include "../utils/to_lower.h"
 #include "../hash_map/hash_map.h"
-#include "file/file.h"
 
 typedef struct {
     char *error;                    // string containing an error if tok == T_ILLEGAL
@@ -37,5 +36,7 @@ void lexerFree(Lexer *lexer);
 TokenType getToken(Lexer *lexer);
 
 void tokenInspect(Lexer *lexer);
+
+void lexerDisplayError(Lexer *lexer);
 
 #endif //YAMLDB_LEXER_H

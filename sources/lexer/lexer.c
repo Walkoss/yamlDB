@@ -7,7 +7,6 @@
 */
 
 #include "lexer.h"
-#include "file/file.h"
 
 void lexerMakeTokenLiteral(Lexer *lexer, char *keyword, TokenType type) {
     TokenHash *tokenHash;
@@ -41,7 +40,7 @@ Lexer *lexerInit(char *buffer) {
     if (lexer != NULL) {
         lexer->error = xmalloc(MAX_LEXICAL_VALUE, __func__);
         lexer->cur = T_EOS;
-        lexer->lineNb = 0;
+        lexer->lineNb = 1;
         lexer->curPos = 1;
         lexer->tok = T_EOS;
         lexer->value = xmalloc(MAX_LEXICAL_VALUE, __func__);
@@ -73,7 +72,7 @@ int lexerNextCharacter(Lexer *lexer) {
         lexer->cur = lexer->buffer[lexer->cursor++];
         if (lexer->cur == '\n') {
             lexer->lineNb++;
-            lexer->curPos = 0;
+            lexer->curPos = 1;
         } else {
             lexer->curPos++;
         }
@@ -98,8 +97,9 @@ int lexerIsEos(Lexer *lexer) {
     return lexerPeekCharacter(lexer) == T_EOS;
 }
 
-void lexerSetError(Lexer *lexer, char *msg) {
-    lexer->error = strcpy(lexer->error, msg);
+void lexerDisplayError(Lexer *lexer) {
+    fprintf(stderr, "SyntaxError: %s at line %zd and position %zd",
+            lexer->error, lexer->lineNb, lexer->curPos);
 }
 
 void tokenInspect(Lexer *lexer) {
@@ -111,6 +111,13 @@ void tokenInspect(Lexer *lexer) {
         case T_LIT_STR_SIMPLE_QUOTE:
         case T_LIT_STR_BACK_QUOTE:
             printf("string: %s\n", lexer->value);
+            break;
+        case T_LIT_INT:
+            printf("int: %d\n", atoi(lexer->value));
+            break;
+        case T_LIT_FLOAT:
+            printf("int: %f\n", atof(lexer->value));
+            break;
         default:
             printf("type: %s\n", tokenTypeAsString(lexer->tok));
     }
@@ -127,7 +134,7 @@ TokenType readLiteralString(Lexer *lexer, int quote) {
     char buffer[MAX_LEXICAL_VALUE];
 
     len = 0;
-    lexerNextCharacter(lexer);
+    lexerNextCharacter(lexer); // To consume the first quote
     while (!lexerIsEos(lexer) && quote != (character = lexerNextCharacter
             (lexer))) {
         // TODO: handle \t, ... + check if lineNb is incremented when \n
@@ -136,14 +143,14 @@ TokenType readLiteralString(Lexer *lexer, int quote) {
             if (character == 'n') {
                 character = '\n';
                 lexer->lineNb++;
-                lexer->curPos = 0;
+                lexer->curPos = 1;
             }
         }
         buffer[len++] = (char) character;
     }
 
     if (lexerIsEos(lexer) && lexer->cur != quote) {
-        // TODO: set error QUOTE END
+        sprintf(lexer->error, "Missing end quote (%c)", quote);
         return T_ILLEGAL;
     }
 
@@ -184,6 +191,37 @@ TokenType readIdentifierOrKeyword(Lexer *lexer) {
     return T_LIT_IDENTIFIER;
 }
 
+TokenType readNumber(Lexer *lexer) {
+    int character;
+    int len;
+    char buffer[MAX_LEXICAL_VALUE];
+    int hasDot;
+    TokenType tokenType;
+
+    tokenType = T_LIT_INT;
+    len = 0;
+    hasDot = 0;
+    while ((character = lexerPeekCharacter(lexer)) == '.'
+           || isdigit(character)) {
+        if (character == '.') {
+            if (hasDot) {
+                sprintf(lexer->error, "multiple dot for float number");
+                return T_ILLEGAL;
+            } else {
+                hasDot = 1;
+                tokenType = T_LIT_FLOAT;
+            }
+        }
+        buffer[len++] = (char) character;
+        lexerNextCharacter(lexer);
+    }
+
+    buffer[len] = '\0';
+    lexer->value = strdup(buffer);
+
+    return tokenType;
+}
+
 TokenType getToken(Lexer *lexer) {
     int currentCharacter;
 
@@ -195,7 +233,6 @@ TokenType getToken(Lexer *lexer) {
     }
 
     currentCharacter = lexerPeekCharacter(lexer);
-    printf("\nCurrent character: %c\n", currentCharacter);
 
     // TODO: refactor this using function pointers maybe?
     if (currentCharacter == '\'' || currentCharacter == '"' ||
@@ -206,6 +243,10 @@ TokenType getToken(Lexer *lexer) {
         );
     } else if (isalpha(currentCharacter) || currentCharacter == '_') {
         return lexerSetTokenType(lexer, readIdentifierOrKeyword(lexer));
+    } else if (isdigit(currentCharacter) || currentCharacter == '.') {
+        return lexerSetTokenType(lexer, readNumber(lexer));
     }
+    // TODO: Handle operator
+    sprintf(lexer->error, "Unexpected character (%c)", currentCharacter);
     return lexerSetTokenType(lexer, T_ILLEGAL);
 }

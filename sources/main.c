@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
             tokenInspect(lexer);
         }
         if (tok == T_ILLEGAL) {
-            printf("Illegal\n");
+            lexerDisplayError(lexer);
         }
         lexerFree(lexer);
     }
