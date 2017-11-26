@@ -33,15 +33,7 @@ int addData(Database *database, Table *table, Data *data) {
     fprintf(file, "\t-\n");
 
     while (currentData != NULL) {
-        if (currentData->field->type == PK || currentData->field->type == INT)
-            fprintf(file, "\t\t%s: %d\n ", currentData->field->name, *(int*) currentData->value);
-        else if (currentData->field->type == FLOAT)
-            fprintf(file, "\t\t%s: %f\n ", currentData->field->name, *(float*) currentData->value);
-        else if (currentData->field->type == CHAR)
-            fprintf(file, "\t\t%s: %c\n ", currentData->field->name, *(char*) currentData->value);
-        else if (currentData->field->type == VARCHAR)
-            fprintf(file, "\t\t%s: %s\n ", currentData->field->name, *(char**)currentData->value);
-
+        fprintf(file, "\t\t%s: %s\n ", currentData->field->name, currentData->value);
         currentData = currentData->next;
     }
 

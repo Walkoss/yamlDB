@@ -23,15 +23,11 @@ int main() {
     field2->type = VARCHAR;
     field2->next = NULL;
 
-    int value = 1996;
-    data1->value = &value;
-    *(int*) data1->value = value;
+    data1->value = "1996";
     data1->field = field1;
     data1->next = data2;
 
-    char *svalue = "alexis";
-    data2->value = &svalue;
-    *(char**) data2->value = svalue;
+    data2->value = "alexis";
     data2->field = field2;
     data2->next = NULL;
 
@@ -48,9 +44,7 @@ int main() {
     field3->type = INT;
     field3->next = NULL;
 
-    value = 2017;
-    data3->value = &value;
-    *(int*) data3->value = value;
+    data3->value = "2017";
     data3->field = field3;
     data3->next = NULL;
     /* Fin des tables de test */
