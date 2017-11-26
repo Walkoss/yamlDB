@@ -39,6 +39,9 @@ void lexerInitTokensHashTable(Lexer *lexer) {
     lexerMakeTokenLiteral(lexer, "use", T_KW_USE);
     lexerMakeTokenLiteral(lexer, "database", T_KW_DATABASE);
     lexerMakeTokenLiteral(lexer, "table", T_KW_TABLE);
+    lexerMakeTokenLiteral(lexer, "int", T_KW_INT);
+    lexerMakeTokenLiteral(lexer, "float", T_KW_FLOAT);
+    lexerMakeTokenLiteral(lexer, "varchar", T_KW_VARCHAR);
 }
 
 Lexer *lexerInit(char *buffer) {
@@ -180,7 +183,7 @@ TokenType readIdentifierOrKeyword(Lexer *lexer) {
 
     len = 0;
     while ((character = lexerPeekCharacter(lexer)) == '_'
-           || isalpha(character)) {
+           || isalpha(character) || isdigit(character)) {
         lexerNextCharacter(lexer);
         buffer[len++] = (char) character;
     }

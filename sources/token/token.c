@@ -28,6 +28,9 @@ TokenHash tokens[] = {
         {.token = T_KW_USE, .value = "use"},
         {.token = T_KW_DATABASE, .value = "database"},
         {.token = T_KW_TABLE, .value = "table"},
+        {.token = T_KW_INT, .value = "int"},
+        {.token = T_KW_FLOAT, .value = "float"},
+        {.token = T_KW_VARCHAR, .value = "varchar"},
         {.value = "NULL"}
 };
 
