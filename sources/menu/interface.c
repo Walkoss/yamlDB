@@ -5,6 +5,10 @@
 #include <ctype.h>
 #include "interface.h"
 
+/**
+ * Print sentences which depends of result parameter
+ * @param result
+ */
 void isSuccess(int result)
 {
     if (!result)
@@ -13,14 +17,25 @@ void isSuccess(int result)
         puts("Erreur lors de la réalisation de l'action.\n");
 }
 
+/**
+ * Tells if there is only digit in string
+ * @param str
+ * @return 1 if success, 0 for error
+ */
 int isAllDigit(const char* str)
 {
     for (int i = 0; i < strlen(str); i++)
         if (!isnumber(str[i]))
             return 0;
+
     return 1;
 }
 
+/**
+ * Read user input
+ * @param size
+ * @return char* if success, NULL for error
+ */
 char *getUserInput(int size)
 {
     char *text;
@@ -29,7 +44,6 @@ char *getUserInput(int size)
 
     if ((text = xmalloc(sizeof(char) * size + 1, __FUNCTION__)) == NULL)
         return NULL;
-
     while ((c = getchar()) != '\n' && c != EOF)
     {
         if (i < size)
@@ -43,6 +57,10 @@ char *getUserInput(int size)
     return text;
 }
 
+/**
+ * Prints instruction
+ * @param sentence, size
+ */
 void printInstruction(int sentence, int size)
 {
     char sentences[6][40] = {"Que voulez-vous faire ?",
@@ -56,6 +74,11 @@ void printInstruction(int sentence, int size)
         printf("%s\n", sentences[i]);
 }
 
+/**
+ * Calls function that depends of the parameter userChoice
+ * @param userChoice
+ * @return 0 if success, 1 for error
+ */
 int choice(long userChoice)
 {
     int result;
@@ -69,7 +92,7 @@ int choice(long userChoice)
     printInstruction(4, 1);
     databaseName = getUserInput(50);
     if (userChoice < 3)
-        result =  databaseFuncs[userChoice - 1](databaseName);
+        result = databaseFuncs[userChoice - 1](databaseName);
     else
     {
         printInstruction(5, 1);
@@ -82,6 +105,11 @@ int choice(long userChoice)
     return result;
 }
 
+/**
+ * Gets user input and begins processes
+ * @param userChoice
+ * @return 0 if success, 1 for error
+ */
 int userInterface()
 {
     while (1) {

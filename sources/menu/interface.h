@@ -19,5 +19,10 @@
 #include "../table/table.h"
 
 int userInterface();
+int choice(long userChoice);
+void printInstruction(int sentence, int size);
+char *getUserInput(int size);
+int isAllDigit(const char* str);
+void isSuccess(int result);
 
 #endif //YAMLDB_INTERFACE_H
