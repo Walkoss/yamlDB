@@ -54,7 +54,7 @@ int main() {
     useDatabase(database);
     createTable(database, table1);
     //createTable(database, table2);
-    addDataInFile(database, table1, data1);
+    addData(database, table1, data1);
     //debugDatabase(database);
     //dropTable(database, table1);
     //dropTable(database, table2);

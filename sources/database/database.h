@@ -52,6 +52,6 @@ int initFields(Database *database, Table *table);
 int addFieldsInFile(Database *database, Table *table);
 int freeFields(Table *table);
 
-int addDataInFile(Database *database, Table *table, Data *data);
+int addData(Database *database, Table *table, Data *data);
 
 #endif //YAMLDB_DATABASE_H

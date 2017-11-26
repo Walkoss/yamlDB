@@ -8,7 +8,7 @@
 
 #include "../database/database.h"
 
-int addDataInFile(Database *database, Table *table, Data *data) {
+int addData(Database *database, Table *table, Data *data) {
     FILE *file;
     char *path;
     Data *currentData;
