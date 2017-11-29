@@ -25,4 +25,6 @@ char *getUserInput(int size);
 int isAllDigit(const char* str);
 void isSuccess(int result);
 
+
+
 #endif //YAMLDB_INTERFACE_H
