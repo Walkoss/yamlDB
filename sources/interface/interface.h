@@ -10,6 +10,8 @@
 
 #define RESOURCES_DIR "resources/"
 
+#include <ctype.h>
+
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,12 +21,11 @@
 #include "../table/table.h"
 
 int userInterface();
-int choice(long userChoice);
+Database *choice(long userChoice, Database *database);
 void printInstruction(int sentence, int size);
 char *getUserInput(int size);
 int isAllDigit(const char* str);
 void isSuccess(int result);
-
 
 
 #endif //YAMLDB_INTERFACE_H

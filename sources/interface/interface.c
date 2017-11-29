@@ -1,8 +1,6 @@
 //
 // Created by Iliasse Wahbi on 14/11/2017.
 //
-
-#include <ctype.h>
 #include "interface.h"
 
 /**
@@ -44,10 +42,8 @@ char *getUserInput(int size)
 
     if ((text = xmalloc(sizeof(char) * size + 1, __FUNCTION__)) == NULL)
         return NULL;
-    while ((c = getchar()) != '\n' && c != EOF)
-    {
-        if (i < size)
-        {
+    while ((c = getchar()) != '\n' && c != EOF) {
+        if (i < size) {
             text[i] = (char) c;
             i++;
         }
@@ -63,10 +59,12 @@ char *getUserInput(int size)
  */
 void printInstruction(int sentence, int size)
 {
-    char sentences[6][40] = {"Que voulez-vous faire ?",
+    char sentences[8][40] = {"Que voulez-vous faire ?",
                              "1: Ajouter une base de données",
-                             "2: Supprimer une base de données",
-                             "3: Supprimer une table",
+                             "2: Utiliser une base de données",
+                             "3: Supprimer une base de données",
+                             "4: Créer une table",
+                             "5: Supprimer une table",
                              "Entrez le nom de la base de données",
                              "Entrez le nom de la table"};
 
@@ -79,30 +77,53 @@ void printInstruction(int sentence, int size)
  * @param userChoice
  * @return 0 if success, 1 for error
  */
-int choice(long userChoice)
+Database *choice(long userChoice, Database *database)
 {
     int result;
     char *databaseName;
     char *tableName;
-    int (*databaseFuncs[2])(const char *) = {addDatabase, removeDatabase};
-    int (*tableFuncs[1])(const char *, const char *) = {removeTable};
+    int (*databaseFuncs[3])(Database*) = {createDatabase, useDatabase, dropDatabase};
+    int (*tableFuncs[2])(Database*, Table*) = {createTable, dropTable};
 
-    if (userChoice < 0 || userChoice >= 4)
-        return 1;
-    printInstruction(4, 1);
-    databaseName = getUserInput(50);
-    if (userChoice < 3)
-        result = databaseFuncs[userChoice - 1](databaseName);
+
+
+    if (userChoice < 0 || userChoice >= 6)
+        return NULL;
+    printInstruction(6, 1);
+
+    if (userChoice < 4) {
+        databaseName = getUserInput(50);
+        database = initDatabase(databaseName);
+        result = databaseFuncs[userChoice - 1](database);
+        free(databaseName);
+    }
     else
     {
-        printInstruction(5, 1);
-        tableName = getUserInput(50);
-        result = tableFuncs[userChoice - 3](databaseName, tableName);
-        free(tableName);
-    }
-    free(databaseName);
+        Table *table1 = xmalloc(sizeof(Table), __func__);
+        Field *field1 = xmalloc(sizeof(Field), __func__);
+        Field *field2 = xmalloc(sizeof(Field), __func__);
 
-    return result;
+        table1->name = "test";
+        table1->pk = 0;
+        table1->fieldHead = field1;
+        table1->next = NULL;
+
+        field1->name = "field1";
+        field1->type = VARCHAR;
+        field1->next = field2;
+
+        field2->name = "field2";
+        field2->type = INT;
+        field2->next = NULL;
+
+        printInstruction(7, 1);
+        result = tableFuncs[userChoice - 4](database, table1);
+        //free(tableName);
+    }
+
+
+    //return result;
+    return database;
 }
 
 /**
@@ -112,8 +133,10 @@ int choice(long userChoice)
  */
 int userInterface()
 {
+    Database *database = NULL;
+
     while (1) {
-        printInstruction(0, 4);
+        printInstruction(0, 6);
         char *text = getUserInput(5);
         if (!strcmp(text, "quit"))
         {
@@ -121,7 +144,9 @@ int userInterface()
             break;
         }
         else if (text[0] != '\0' && isAllDigit(text))
-            isSuccess(choice(strtol(text, NULL, 10)));
+            database = choice(strtol(text, NULL, 10), database);
+
+        printf("DEBUG : %s", database->name);
         free(text);
     }
     return 0;

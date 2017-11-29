@@ -139,6 +139,7 @@ int freeTable(Database *database, Table *table) {
  */
 int createTable(Database *database, Table *table) {
     char *path;
+    printf("\n\nDEBUG\n\n %s", database->name);
 
     if (!database || !table)
         return 1;

@@ -50,17 +50,17 @@ int freeDatabase(Database *database) {
 /**
  * Initialize a Database with tables and fields
  * @param database
- * @return a Database
+ * @return 0 if success, 1 for error
  */
-Database *useDatabase(Database *database) {
+int useDatabase(Database *database) {
     char *path;
 
     if (!database)
-        return NULL;
+        return 1;
 
     path = getDatabasePath(database->name);
     if (!path)
-        return NULL;
+        return 1;
 
     if (access(path, 0) == 0) { // If directory exist
         if (database->isUsed == 0) {
@@ -74,7 +74,7 @@ Database *useDatabase(Database *database) {
                 "%s\n", database->name, strerror(errno));
     }
 
-    return database;
+    return 0;
 }
 
 /**
