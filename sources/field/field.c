@@ -25,7 +25,6 @@ int initFields(Database *database, Table *table) {
         return 1;
 
     file = fopen(getTablePath(database->name, table->name), "r");
-
     if (file != NULL) {
         while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
             field = xmalloc(sizeof(Field), __func__);
