@@ -10,6 +10,8 @@ set(SOURCE_FILES
         sources/utils/xmalloc.c
         sources/utils/xmalloc.h
         sources/table/table.c
-        sources/table/table.h)
+        sources/table/table.h
+        sources/field/field.c
+        sources/field/field.h)
 
 add_executable(yamlDB ${SOURCE_FILES})
