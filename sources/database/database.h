@@ -54,5 +54,6 @@ int freeFields(Table *table);
 
 int addData(Database *database, Table *table, Data *data);
 int removeData(Database *database, Table *table, Condition *condition);
+long removeDataFromFile(FILE *file, Condition *condition);
 
 #endif //YAMLDB_DATABASE_H

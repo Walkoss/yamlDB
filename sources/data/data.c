@@ -8,6 +8,13 @@
 
 #include "../database/database.h"
 
+/**
+ * Add data on file
+ * @param database
+ * @param table
+ * @param data
+ * @return 1 for error, 0 if success
+ */
 int addData(Database *database, Table *table, Data *data) {
     FILE *file;
     char *path;
@@ -29,75 +36,114 @@ int addData(Database *database, Table *table, Data *data) {
     }
 
     currentData = data;
-    fprintf(file, "\t-\n");
+    fprintf(file, "-\n");
 
     while (currentData != NULL) {
-        fprintf(file, "\t\t%s: %s\n ", currentData->field->name, currentData->value);
+        fprintf(file, "\t%s: %s\n", currentData->field->name, currentData->value);
         currentData = currentData->next;
     }
 
     return 0;
 }
-
-int removeData(Database *database, Table *table, Condition *condition) {
-    FILE *file;
-    FILE *filetmp;
-    char *path;
-    char currentLine[BUFFER_SIZE];
+/**
+ * remove the data from file
+ * @param file
+ * @param condition
+ * @return a position if a data has to be removed, 0 if not
+ */
+long removeDataFromFile(FILE *file, Condition *condition) {
     char *key;
     char *value;
-    char *token;
+    char currentLine[BUFFER_SIZE];
     int isData;
+    char delim;
+    char delim2;
+
+    isData = 0;
+    delim = ':'; // Char pour parser les lignes key: value \n
+    delim2 = '\n'; // Char pour parser les lignes key: value \n
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") == 0) {
+            if (isData == 0)
+                return 0;
+            else
+                return ftell(file);
+        }
+
+        key = strtok(currentLine, &delim);
+        value = strtok(NULL, &delim2);
+        key = &key[1]; // Supprime la tabulation
+        value = &value[1]; // Supprime le premier espace
+
+        
+        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
+            isData = 1;
+    }
+
+    if (isData == 0)
+        return 0;
+    else
+        return ftell(file);
+}
+
+/**
+ * remove data
+ * @param database
+ * @param table
+ * @param condition
+ * @return 0 for success, 0 if error
+ */
+int removeData(Database *database, Table *table, Condition *condition) {
+    FILE *file;
+    FILE *fileTmp;
+    char *path;
+    char *pathTmp;
+    char currentLine[BUFFER_SIZE];
+    long position;
+    long positionTmp;
 
     if (!database || !table || !condition)
         return 1;
 
     path = getTablePath(database->name, table->name);
-    if (!path)
+    pathTmp = strcat(getTablePath(database->name, table->name), "tmp");
+    if (!path || !pathTmp)
         return 1;
 
     file = fopen(path, "r+");
-    filetmp = fopen(strcat(path, "tmp"), "w+");
-    if (!file || !filetmp) {
-        fprintf(stderr, "An error has occured when adding data in table '%s': "
+    fileTmp = fopen(pathTmp, "w+");
+    if (!file || !fileTmp) {
+        fprintf(stderr, "An error has occured when removing data in table '%s': "
                 "%s\n", table->name, strerror(errno));
         free(path);
+        free(pathTmp);
         return 1;
     }
 
-    isData = 0;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-
-        if (!key)
-            return 1;
-
-        /*if (isData) {
-            fscanf(file, "%s %s", key, value);
-            key[strlen(key) - 1]  = '\0'; // To remove the ":"
-        }*/
-
-        if (isData) {
-            token = strtok(currentLine, ":");
-
-            while (token != NULL) {
-                printf("%s", token);
-
-                token = strtok(NULL, ":");
-            }
-        } else {
-            fputs(currentLine, filetmp);
+        position = ftell(file);
+        if (strcmp(currentLine, "-\n") == 0) {
+            positionTmp = removeDataFromFile(file, condition);
+            if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
+                fseek(file, position, SEEK_SET);
+            else
+                fseek(file, positionTmp, SEEK_SET);
         }
-
-        if (strcmp(currentLine, "data:\n") == 0) {
-            isData = 1;
-        }
-
-        /*if (isData == 1 && strcmp(key, condition->key) == 0 && strcmp(value, condition->value) == 0) {
-            printf("ok\n");
-        }*/
+        fputs(currentLine, fileTmp);
     }
+
+    fclose(file);
+    fclose(fileTmp);
+    remove(path);
+    rename(pathTmp, path);
+    remove(pathTmp);
 
     return 0;
 }

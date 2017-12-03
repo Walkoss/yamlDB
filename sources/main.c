@@ -12,7 +12,7 @@ int main() {
     Condition *condition1 = xmalloc(sizeof(Condition), __func__);
 
     condition1->key = "field1";
-    condition1->value = "1996";
+    condition1->value = "1998";
 
     table1->name = "table1";
     table1->pk = 0;
@@ -27,11 +27,11 @@ int main() {
     field2->type = VARCHAR;
     field2->next = NULL;
 
-    data1->value = "1996";
+    data1->value = "1994";
     data1->field = field1;
     data1->next = data2;
 
-    data2->value = "alexis";
+    data2->value = "test";
     data2->field = field2;
     data2->next = NULL;
 
