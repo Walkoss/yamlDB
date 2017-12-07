@@ -57,4 +57,7 @@ int removeData(Database *database, Table *table, Condition *condition);
 int updateData(Database *database, Table *table, Data *data, Condition *condition);
 long isConditionFulfilled(FILE *file, Condition *condition);
 
+int selectData(Database *database, Table *table, Field *field, Condition *condition);
+int displayData(FILE *file, Field *field);
+
 #endif //YAMLDB_DATABASE_H

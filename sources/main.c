@@ -14,14 +14,14 @@ int main() {
     Condition *condition1 = xmalloc(sizeof(Condition), __func__);
 
     condition1->key = "field1";
-    condition1->value = "1998";
+    condition1->value = "1997";
 
     table1->name = "table1";
     table1->pk = 0;
     table1->fieldHead = field1;
     table1->next = NULL;
 
-    field1->name = "field1";
+    field1->name = NULL;
     field1->type = INT;
     field1->next = field2;
 
@@ -44,23 +44,6 @@ int main() {
     data4->value = "blabla";
     data4->field = field2;
     data4->next = NULL;
-
-    Table *table2 = xmalloc(sizeof(Table), __func__);
-    Field *field3 = xmalloc(sizeof(Field), __func__);
-    Data *data5 = xmalloc(sizeof(Data), __func__);
-
-    table2->name = "table2";
-    table2->pk = 0;
-    table2->fieldHead = field3;
-    table2->next = NULL;
-
-    field3->name = "field3";
-    field3->type = INT;
-    field3->next = NULL;
-
-    data5->value = "2017";
-    data5->field = field3;
-    data5->next = NULL;
     /* Fin des tables de test */
 
     database = initDatabase("database");
@@ -69,8 +52,9 @@ int main() {
     //createTable(database, table1);
     //createTable(database, table2);
     //addData(database, table1, data1);
-    removeData(database, table1, condition1);
+    //removeData(database, table1, condition1);
     //updateData(database, table1, data2, condition1);
+    selectData(database, table1, field1, condition1);
     //debugDatabase(database);
     //dropTable(database, table1);
     //dropTable(database, table2);
