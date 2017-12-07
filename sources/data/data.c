@@ -45,13 +45,119 @@ int addData(Database *database, Table *table, Data *data) {
 
     return 0;
 }
+
 /**
- * remove the data from file
+ * Update data on file
+ * @param file
+ * @param fileTmp
+ * @param data
+ * @return
+ */
+int updateDataFromFile(FILE *file, FILE *fileTmp, Data *data) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    char delim;
+    char delim2;
+
+    delim = ':'; // Char pour parser les lignes key: value \n
+    delim2 = '\n'; // Char pour parser les lignes key: value \n
+
+    fputs("-\n", fileTmp);
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") == 0)
+            return 0;
+
+        key = strtok(currentLine, &delim);
+        value = strtok(NULL, &delim2);
+        key = &key[1]; // Supprime la tabulation
+        value = &value[1]; // Supprime le premier espace
+
+        fputs("\t", fileTmp);
+        fputs(key, fileTmp);
+        fputs(": ", fileTmp);
+
+        if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0)
+            fputs(data->value, fileTmp);
+        else if (strcmp(key, data->field->name) != 0 && strcmp(key, "-\n") != 0)
+            fputs(value, fileTmp);
+
+        fputs("\n", fileTmp);
+    }
+
+    return 0;
+}
+
+/**
+ * Update data on file
+ * @param database
+ * @param table
+ * @param data
+ * @param condition
+ * @return
+ */
+int updateData(Database *database, Table *table, Data *data, Condition *condition) {
+    FILE *file;
+    FILE *fileTmp;
+    char *path;
+    char *pathTmp;
+    char currentLine[BUFFER_SIZE];
+    long position;
+    long positionTmp;
+
+    if (!database || !table || !condition)
+        return 1;
+
+    path = getTablePath(database->name, table->name);
+    pathTmp = strcat(getTablePath(database->name, table->name), "tmp");
+    if (!path || !pathTmp)
+        return 1;
+
+    file = fopen(path, "r+");
+    fileTmp = fopen(pathTmp, "w+");
+    if (!file || !fileTmp) {
+        fprintf(stderr, "An error has occured when removing data in table '%s': "
+                "%s\n", table->name, strerror(errno));
+        free(path);
+        free(pathTmp);
+        return 1;
+    }
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        position = ftell(file);
+        if (strcmp(currentLine, "-\n") == 0) {
+            positionTmp = isConditionFulfilled(file, condition);
+            fseek(file, position, SEEK_SET);
+            if (positionTmp != 0) {
+                updateDataFromFile(file, fileTmp, data);
+            }
+        }
+        fputs(currentLine, fileTmp);
+    }
+
+    fclose(file);
+    fclose(fileTmp);
+    remove(path);
+    rename(pathTmp, path);
+    remove(pathTmp);
+
+    return 0;
+}
+
+/**
+ * Check if the condition is fulfilled
  * @param file
  * @param condition
- * @return a position if a data has to be removed, 0 if not
+ * @return
  */
-long removeDataFromFile(FILE *file, Condition *condition) {
+long isConditionFulfilled(FILE *file, Condition *condition) {
     char *key;
     char *value;
     char currentLine[BUFFER_SIZE];
@@ -81,7 +187,6 @@ long removeDataFromFile(FILE *file, Condition *condition) {
         value = strtok(NULL, &delim2);
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
-
         
         if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
             isData = 1;
@@ -94,7 +199,7 @@ long removeDataFromFile(FILE *file, Condition *condition) {
 }
 
 /**
- * remove data
+ * Remove data on file
  * @param database
  * @param table
  * @param condition
@@ -130,7 +235,7 @@ int removeData(Database *database, Table *table, Condition *condition) {
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
         if (strcmp(currentLine, "-\n") == 0) {
-            positionTmp = removeDataFromFile(file, condition);
+            positionTmp = isConditionFulfilled(file, condition);
             if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
                 fseek(file, position, SEEK_SET);
             else
