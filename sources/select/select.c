@@ -8,10 +8,74 @@
 
 #include "../database/database.h"
 
-int displayData(FILE *file, Field *field) {
-    printf("test");
-    if (field->name == NULL) {
-        printf("test");
+int displaySingleData(FILE *file, Field *field) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    char delim;
+    char delim2;
+    Field *currentField;
+    long position;
+
+    delim = ':'; // Char pour parser les lignes key: value \n
+    delim2 = '\n'; // Char pour parser les lignes key: value \n
+
+    currentField = field;
+    while (currentField != NULL) {
+        position = ftell(file);
+        while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+            key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+            value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+            if (!key || !value)
+                break;
+
+            if (strcmp(currentLine, "-\n") == 0)
+                break;
+
+            key = strtok(currentLine, &delim);
+            value = strtok(NULL, &delim2);
+            key = &key[1]; // Supprime la tabulation
+            value = &value[1]; // Supprime le premier espace
+
+            if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0)
+                printf("%s: %s\n", key, value);
+        }
+        fseek(file, position, SEEK_SET);
+        currentField = currentField->next;
+    }
+
+    fclose(file);
+    return 0;
+}
+
+int displayAllData(FILE *file, Field *field) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    char delim;
+    char delim2;
+
+    delim = ':'; // Char pour parser les lignes key: value \n
+    delim2 = '\n'; // Char pour parser les lignes key: value \n
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") == 0)
+            return 0;
+
+        key = strtok(currentLine, &delim);
+        value = strtok(NULL, &delim2);
+        key = &key[1]; // Supprime la tabulation
+        value = &value[1]; // Supprime le premier espace
+
+        if (strcmp(key, "-\n") != 0)
+            printf("%s: %s\n", key, value);
     }
 
     return 0;
@@ -45,7 +109,10 @@ int selectData(Database *database, Table *table, Field *field, Condition *condit
             positionTmp = isConditionFulfilled(file, condition);
             fseek(file, position, SEEK_SET);
             if (positionTmp != 0) {
-                displayData(file, field);
+                if (field->name == NULL)
+                    displayAllData(file, field);
+                else
+                    displaySingleData(file, field);
             }
         }
     }

@@ -58,6 +58,7 @@ int updateData(Database *database, Table *table, Data *data, Condition *conditio
 long isConditionFulfilled(FILE *file, Condition *condition);
 
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
-int displayData(FILE *file, Field *field);
+int displayAllData(FILE *file, Field *field);
+int displaySingleData(FILE *file, Field *field);
 
 #endif //YAMLDB_DATABASE_H

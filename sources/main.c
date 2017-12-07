@@ -14,14 +14,14 @@ int main() {
     Condition *condition1 = xmalloc(sizeof(Condition), __func__);
 
     condition1->key = "field1";
-    condition1->value = "1997";
+    condition1->value = "1994";
 
     table1->name = "table1";
     table1->pk = 0;
     table1->fieldHead = field1;
     table1->next = NULL;
 
-    field1->name = NULL;
+    field1->name = "field1";
     field1->type = INT;
     field1->next = field2;
 
