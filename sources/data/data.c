@@ -13,7 +13,7 @@
  * @param database
  * @param table
  * @param data
- * @return 1 for error, 0 if success
+ * @return 0 if success, 1 for error
  */
 int addData(Database *database, Table *table, Data *data) {
     FILE *file;
@@ -51,9 +51,9 @@ int addData(Database *database, Table *table, Data *data) {
  * @param file
  * @param fileTmp
  * @param data
- * @return
+ * @return 0 if success, 1 for error
  */
-int updateDataFromFile(FILE *file, FILE *fileTmp, Data *data) {
+int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
     char *key;
     char *value;
     char currentLine[BUFFER_SIZE];
@@ -64,7 +64,6 @@ int updateDataFromFile(FILE *file, FILE *fileTmp, Data *data) {
     delim2 = '\n'; // Char pour parser les lignes key: value \n
 
     fputs("-\n", fileTmp);
-
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -95,22 +94,47 @@ int updateDataFromFile(FILE *file, FILE *fileTmp, Data *data) {
     return 0;
 }
 
+
 /**
- * Update data on file
+ * Update data
+ * @param file
+ * @param fileTmp
+ * @param data
+ * @param condition
+ * @return
+ */
+void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
+    char currentLine[BUFFER_SIZE];
+    long position;
+    long positionTmp;
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        position = ftell(file);
+        if (strcmp(currentLine, "-\n") == 0) {
+            positionTmp = isConditionFulfilled(file, condition);
+            fseek(file, position, SEEK_SET);
+            if (positionTmp != 0) {
+                updateDataOnFile(file, fileTmp, data);
+            }
+        }
+        fputs(currentLine, fileTmp);
+    }
+}
+
+
+/**
+ * Open Files before update data
  * @param database
  * @param table
  * @param data
  * @param condition
  * @return
  */
-int updateData(Database *database, Table *table, Data *data, Condition *condition) {
+int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition) {
     FILE *file;
     FILE *fileTmp;
     char *path;
     char *pathTmp;
-    char currentLine[BUFFER_SIZE];
-    long position;
-    long positionTmp;
 
     if (!database || !table || !condition)
         return 1;
@@ -130,17 +154,76 @@ int updateData(Database *database, Table *table, Data *data, Condition *conditio
         return 1;
     }
 
+    updateData(file, fileTmp, data, condition);
+
+    fclose(file);
+    fclose(fileTmp);
+    remove(path);
+    rename(pathTmp, path);
+    remove(pathTmp);
+
+    return 0;
+}
+
+/**
+ * Remove data on file
+ * @param database
+ * @param table
+ * @param condition
+ * @return 0 if success, 1 for error
+ */
+void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
+    char currentLine[BUFFER_SIZE];
+    long position;
+    long positionTmp;
+
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
         if (strcmp(currentLine, "-\n") == 0) {
             positionTmp = isConditionFulfilled(file, condition);
-            fseek(file, position, SEEK_SET);
-            if (positionTmp != 0) {
-                updateDataFromFile(file, fileTmp, data);
-            }
+            if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
+                fseek(file, position, SEEK_SET);
+            else
+                fseek(file, positionTmp, SEEK_SET);
         }
         fputs(currentLine, fileTmp);
     }
+}
+
+
+/**
+ * Open Files before remove data
+ * @param database
+ * @param table
+ * @param data
+ * @param condition
+ * @return
+ */
+int openFilesForRemoving(Database *database, Table *table, Condition *condition) {
+    FILE *file;
+    FILE *fileTmp;
+    char *path;
+    char *pathTmp;
+
+    if (!database || !table || !condition)
+        return 1;
+
+    path = getTablePath(database->name, table->name);
+    pathTmp = strcat(getTablePath(database->name, table->name), "tmp");
+    if (!path || !pathTmp)
+        return 1;
+
+    file = fopen(path, "r+");
+    fileTmp = fopen(pathTmp, "w+");
+    if (!file || !fileTmp) {
+        fprintf(stderr, "An error has occured when removing data in table '%s': "
+                "%s\n", table->name, strerror(errno));
+        free(path);
+        free(pathTmp);
+        return 1;
+    }
+
+    removeData(file, fileTmp, condition);
 
     fclose(file);
     fclose(fileTmp);
@@ -155,7 +238,7 @@ int updateData(Database *database, Table *table, Data *data, Condition *conditio
  * Check if the condition is fulfilled
  * @param file
  * @param condition
- * @return
+ * @return 0 if not fulfilled, 1 for error, position is fulfilled
  */
 long isConditionFulfilled(FILE *file, Condition *condition) {
     char *key;
@@ -187,7 +270,7 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
         value = strtok(NULL, &delim2);
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
-        
+
         if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
             isData = 1;
     }
@@ -196,59 +279,4 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
         return 0;
     else
         return ftell(file);
-}
-
-/**
- * Remove data on file
- * @param database
- * @param table
- * @param condition
- * @return 0 for success, 0 if error
- */
-int removeData(Database *database, Table *table, Condition *condition) {
-    FILE *file;
-    FILE *fileTmp;
-    char *path;
-    char *pathTmp;
-    char currentLine[BUFFER_SIZE];
-    long position;
-    long positionTmp;
-
-    if (!database || !table || !condition)
-        return 1;
-
-    path = getTablePath(database->name, table->name);
-    pathTmp = strcat(getTablePath(database->name, table->name), "tmp");
-    if (!path || !pathTmp)
-        return 1;
-
-    file = fopen(path, "r+");
-    fileTmp = fopen(pathTmp, "w+");
-    if (!file || !fileTmp) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table->name, strerror(errno));
-        free(path);
-        free(pathTmp);
-        return 1;
-    }
-
-    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        position = ftell(file);
-        if (strcmp(currentLine, "-\n") == 0) {
-            positionTmp = isConditionFulfilled(file, condition);
-            if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
-                fseek(file, position, SEEK_SET);
-            else
-                fseek(file, positionTmp, SEEK_SET);
-        }
-        fputs(currentLine, fileTmp);
-    }
-
-    fclose(file);
-    fclose(fileTmp);
-    remove(path);
-    rename(pathTmp, path);
-    remove(pathTmp);
-
-    return 0;
 }

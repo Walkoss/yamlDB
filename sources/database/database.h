@@ -49,16 +49,22 @@ int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
 int initFields(Database *database, Table *table);
+int initFieldsInStruct(FILE *file, Table *table, Field *field);
 int addFieldsInFile(Database *database, Table *table);
 int freeFields(Table *table);
 
 int addData(Database *database, Table *table, Data *data);
-int removeData(Database *database, Table *table, Condition *condition);
-int updateData(Database *database, Table *table, Data *data, Condition *condition);
+int openFilesForRemoving(Database *database, Table *table, Condition *condition);
+int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
+void removeData(FILE *file, FILE *filetmp, Condition *condition);
+void updateData(FILE *file, FILE *filetmp, Data *data, Condition *condition);
+int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data);
 long isConditionFulfilled(FILE *file, Condition *condition);
 
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
+void selectMethod(FILE *file, Field *field, Condition *condition);
 int displayAllData(FILE *file, Field *field);
-int displaySingleData(FILE *file, Field *field);
+int BrowseSingleData(FILE *file, Field *field);
+int displaySingleData(FILE *file, Field *currentField);
 
 #endif //YAMLDB_DATABASE_H

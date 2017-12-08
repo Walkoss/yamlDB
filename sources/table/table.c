@@ -11,6 +11,7 @@
 /**
  * Initialize the tables in Database structure
  * @param database
+ * @return 0 if success, 1 for error
  */
 int initTables(Database *database) {
     struct dirent *file;
@@ -33,8 +34,6 @@ int initTables(Database *database) {
 
             file->d_name[strlen(file->d_name) - 4]  = '\0'; // To remove the ".yml"
             table->name = file->d_name;
-            //TODO : vérifier l'id le plus grand dans les données et rajouter +1
-            table->pk = 0;
             table->fieldHead = NULL;
             table->next = database->tableHead;
 
@@ -51,7 +50,7 @@ int initTables(Database *database) {
 /**
  * Free the tables in a Database structure
  * @param database
- * @return
+ * @return 0 if success, 1 for error
  */
 int freeTables(Database *database) {
     Table *currentTable;
@@ -80,7 +79,7 @@ int freeTables(Database *database) {
  * Find a table in a Database structure
  * @param database
  * @param tableName
- * @return database if success, NULL for error
+ * @return table if success, NULL for error
  */
 Table *findTable(Database *database, char *tableName) {
     Table *currentTable;
