@@ -64,8 +64,9 @@ long isConditionFulfilled(FILE *file, Condition *condition);
 
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
 void selectMethod(FILE *file, Field *field, Condition *condition);
-int displayAllData(FILE *file, Field *field);
-int BrowseSingleData(FILE *file, Field *field);
-int displaySingleData(FILE *file, Field *currentField);
+long displayAllData(FILE *file);
+int displayAllDataWithoutCondition(FILE *file);
+long BrowseSingleData(FILE *file, Field *field);
+long displaySingleData(FILE *file, Field *currentField);
 
 #endif //YAMLDB_DATABASE_H

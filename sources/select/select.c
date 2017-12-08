@@ -12,14 +12,16 @@
  * Display data to user
  * @param file
  * @param currentField
- * @return 0 if success, 1 for error
+ * @return position on the file
  */
-int displaySingleData(FILE *file, Field *currentField) {
+long displaySingleData(FILE *file, Field *currentField) {
     char currentLine[BUFFER_SIZE];
     char *key;
     char *value;
     char **tokens;
-    
+    long positionTmp;
+
+    positionTmp = 0;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -28,7 +30,7 @@ int displaySingleData(FILE *file, Field *currentField) {
             return 1;
 
         if (strcmp(currentLine, "-\n") == 0)
-            return 1;
+            return positionTmp;
 
         tokens = strSplit(currentLine, ':');
 
@@ -37,48 +39,51 @@ int displaySingleData(FILE *file, Field *currentField) {
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
 
-        if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0)
-            printf("%s: %s\n", key, value);
+        if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0) {
+            printf("\t");
+            printf("%s: %s", key, value);
+        }
+
+        positionTmp = ftell(file);
     }
 
-    return 0;
+    return positionTmp;
 }
 
 /**
  * Browse data
  * @param file
  * @param field
- * @return 0 if success, 1 for error
+ * @return position on the file
  */
-int BrowseSingleData(FILE *file, Field *field) {
+long BrowseSingleData(FILE *file, Field *field) {
     Field *currentField;
     long position;
+    long positionTmp;
 
+    positionTmp = 0;
     currentField = field;
+    printf("-\n");
     while (currentField != NULL) {
         position = ftell(file);
-        displaySingleData(file, currentField);
+        positionTmp = displaySingleData(file, currentField);
         fseek(file, position, SEEK_SET);
         currentField = currentField->next;
     }
-
-    fclose(file);
-    return 0;
+    return positionTmp;
 }
-
 
 /**
  * Display all data when have no condition
  * @param file
- * @param field
  * @return 0 if success, 1 for error
  */
-int displayAllDataWithoutCondition(FILE *file, Field *field) {
+int displayAllDataWithoutCondition(FILE *file) {
     char currentLine[BUFFER_SIZE];
 
     printf("-\n");
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL)
-            printf("%s", currentLine);
+        printf("%s", currentLine);
 
     return 0;
 }
@@ -87,20 +92,23 @@ int displayAllDataWithoutCondition(FILE *file, Field *field) {
  * Display all data when the * is entered
  * @param file
  * @param field
- * @return 0 if success, 1 for error
+ * @return position on the file
  */
-int displayAllData(FILE *file, Field *field) {
+long displayAllData(FILE *file) {
     char currentLine[BUFFER_SIZE];
+    long positionTmp;
 
+    positionTmp = 0;
+    printf("-\n");
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         if (strcmp(currentLine, "-\n") == 0)
-            return 0;
+            return positionTmp;
 
-        if (strcmp(currentLine, "-\n") != 0)
-            printf("%s", currentLine);
+        printf("%s", currentLine);
+        positionTmp = ftell(file);
     }
 
-    return 0;
+    return positionTmp;
 }
 
 /**
@@ -117,16 +125,20 @@ void selectMethod(FILE *file, Field *field, Condition *condition) {
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
         if (strcmp(currentLine, "-\n") == 0) {
-            if (condition == NULL)
-                displayAllDataWithoutCondition(file, field);
+            if (condition == NULL) {
+                if (field->name == NULL)
+                    displayAllDataWithoutCondition(file);
+                else
+                    fseek(file, BrowseSingleData(file, field), SEEK_SET);
+            }
             else {
                 positionTmp = isConditionFulfilled(file, condition);
                 fseek(file, position, SEEK_SET);
                 if (positionTmp != 0) {
                     if (field->name == NULL)
-                        displayAllData(file, field);
+                        fseek(file, displayAllData(file), SEEK_SET);
                     else
-                        BrowseSingleData(file, field);
+                        fseek(file, BrowseSingleData(file, field), SEEK_SET);
                 }
             }
         }
@@ -161,7 +173,6 @@ int selectData(Database *database, Table *table, Field *field, Condition *condit
     }
 
     selectMethod(file, field, condition);
-
     fclose(file);
 
     return 0;

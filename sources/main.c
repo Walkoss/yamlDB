@@ -59,8 +59,8 @@ int main() {
     field4->name = NULL;
     field4->next = NULL;
 
-    condition1->key = "surname";
-    condition1->value = "El bouchiki";
+    condition1->key = "age";
+    condition1->value = "20";
 
     //database = initDatabase("database");
     //createDatabase(database);
@@ -70,7 +70,7 @@ int main() {
     //addData(database, table1, data4);
     //openFilesForUpdating(database, table1, data3, condition1);
     //openFilesForRemoving(database, table1, condition1);
-    //selectData(database, table1, field4, condition1); // Mettre un field->name à NULL si on select *, Mettre condition = NULL si on veut pas de condition
+    //selectData(database, table1, field1, NULL); // Mettre un field->name à NULL si on select *, Mettre condition = NULL si on veut pas de condition
     //dropTable(database, table1);
     //dropDatabase(database);
 
