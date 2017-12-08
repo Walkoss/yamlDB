@@ -177,3 +177,49 @@ int selectData(Database *database, Table *table, Field *field, Condition *condit
 
     return 0;
 }
+
+
+/**
+ * Check if the condition is fulfilled
+ * @param file
+ * @param condition
+ * @return 0 if not fulfilled, 1 for error, position is fulfilled
+ */
+long isConditionFulfilled(FILE *file, Condition *condition) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    int isData;
+    char** tokens;
+
+    isData = 0;
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") == 0) {
+            if (isData == 0)
+                return 0;
+            else
+                return ftell(file);
+        }
+        tokens = strSplit(currentLine, ':');
+
+        key = tokens[0];
+        value = tokens[1];
+        key = &key[1]; // Supprime la tabulation
+        value = &value[1]; // Supprime le premier espace
+        value[strlen(value) - 1] = '\0'; // Supprime le /n
+
+        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
+            isData = 1;
+    }
+
+    if (isData == 0)
+        return 0;
+    else
+        return ftell(file);
+}

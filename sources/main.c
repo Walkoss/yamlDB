@@ -60,16 +60,16 @@ int main() {
     field4->next = NULL;
 
     condition1->key = "age";
-    condition1->value = "20";
+    condition1->value = "21";
 
-    //database = initDatabase("database");
+    database = initDatabase("database");
     //createDatabase(database);
-    //useDatabase(database);
+    useDatabase(database);
     //createTable(database, table1);
     //addData(database, table1, data1);
     //addData(database, table1, data4);
-    //openFilesForUpdating(database, table1, data3, condition1);
-    //openFilesForRemoving(database, table1, condition1);
+    openFilesForUpdating(database, table1, data1, NULL);
+    //openFilesForRemoving(database, table1, NULL);
     //selectData(database, table1, field1, NULL); // Mettre un field->name à NULL si on select *, Mettre condition = NULL si on veut pas de condition
     //dropTable(database, table1);
     //dropDatabase(database);

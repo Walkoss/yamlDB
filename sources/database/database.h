@@ -59,8 +59,7 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
 int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
 void removeData(FILE *file, FILE *filetmp, Condition *condition);
 void updateData(FILE *file, FILE *filetmp, Data *data, Condition *condition);
-int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data);
-long isConditionFulfilled(FILE *file, Condition *condition);
+long updateDataOnFile(FILE *file, FILE *fileTmp, Data *data);
 
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
 void selectMethod(FILE *file, Field *field, Condition *condition);
@@ -68,5 +67,6 @@ long displayAllData(FILE *file);
 int displayAllDataWithoutCondition(FILE *file);
 long BrowseSingleData(FILE *file, Field *field);
 long displaySingleData(FILE *file, Field *currentField);
+long isConditionFulfilled(FILE *file, Condition *condition);
 
 #endif //YAMLDB_DATABASE_H

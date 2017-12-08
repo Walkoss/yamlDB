@@ -53,13 +53,14 @@ int addData(Database *database, Table *table, Data *data) {
  * @param data
  * @return 0 if success, 1 for error
  */
-int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
+long updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
     char *key;
     char *value;
     char currentLine[BUFFER_SIZE];
     char** tokens;
+    long positionTmp;
 
-    fputs("-\n", fileTmp);
+    positionTmp = 0;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -68,7 +69,7 @@ int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
             return 1;
 
         if (strcmp(currentLine, "-\n") == 0)
-            return 0;
+            return positionTmp;
 
         tokens = strSplit(currentLine, ':');
 
@@ -87,6 +88,51 @@ int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
         }
         else if (strcmp(key, data->field->name) != 0 && strcmp(key, "-\n") != 0)
             fputs(value, fileTmp);
+
+        positionTmp = ftell(file);
+    }
+
+    return 0;
+}
+
+int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    char** tokens;
+
+    fputs("-\n", fileTmp);
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") != 0) {
+            tokens = strSplit(currentLine, ':');
+
+            key = tokens[0];
+            value = tokens[1];
+            key = &key[1]; // Supprime la tabulation
+            value = &value[1]; // Supprime le premier espace
+
+            if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0) {
+                fputs("\t", fileTmp);
+                fputs(key, fileTmp);
+                fputs(": ", fileTmp);
+                fputs(data->value, fileTmp);
+                fputs("\n", fileTmp);
+            }
+            else {
+                fputs("\t", fileTmp);
+                fputs(key, fileTmp);
+                fputs(": ", fileTmp);
+                fputs(value, fileTmp);
+            }
+        }
+        else
+            fputs("-\n", fileTmp);
     }
 
     return 0;
@@ -107,11 +153,18 @@ void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
 
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
+
         if (strcmp(currentLine, "-\n") == 0) {
-            positionTmp = isConditionFulfilled(file, condition);
-            fseek(file, position, SEEK_SET);
-            if (positionTmp != 0) {
-                updateDataOnFile(file, fileTmp, data);
+            if (condition == NULL) {
+                updateEveryData(file, fileTmp, data);
+                break;
+            }
+            else {
+                positionTmp = isConditionFulfilled(file, condition);
+                fseek(file, position, SEEK_SET);
+                if (positionTmp != 0) {
+                    updateDataOnFile(file, fileTmp, data);
+                }
             }
         }
         fputs(currentLine, fileTmp);
@@ -132,7 +185,7 @@ int openFilesForUpdating(Database *database, Table *table, Data *data, Condition
     char *path;
     char *pathTmp;
 
-    if (!database || !table || !condition)
+    if (!database || !table)
         return 1;
 
     path = getTablePath(database->name, table->name);
@@ -175,12 +228,20 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
 
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
+
         if (strcmp(currentLine, "-\n") == 0) {
-            positionTmp = isConditionFulfilled(file, condition);
-            if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
-                fseek(file, position, SEEK_SET);
-            else
-                fseek(file, positionTmp, SEEK_SET);
+                if (condition != NULL)
+                    positionTmp = isConditionFulfilled(file, condition);
+                else {
+                    fseek(fileTmp, 0, SEEK_END);
+                    positionTmp = ftell(fileTmp);
+                    fclose(fileTmp);
+                }
+
+                if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
+                    fseek(file, position, SEEK_SET);
+                else
+                    fseek(file, positionTmp, SEEK_SET);
         }
         fputs(currentLine, fileTmp);
     }
@@ -200,7 +261,7 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
     char *path;
     char *pathTmp;
 
-    if (!database || !table || !condition)
+    if (!database || !table)
         return 1;
 
     path = getTablePath(database->name, table->name);
@@ -227,49 +288,4 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
     remove(pathTmp);
 
     return 0;
-}
-
-/**
- * Check if the condition is fulfilled
- * @param file
- * @param condition
- * @return 0 if not fulfilled, 1 for error, position is fulfilled
- */
-long isConditionFulfilled(FILE *file, Condition *condition) {
-    char *key;
-    char *value;
-    char currentLine[BUFFER_SIZE];
-    int isData;
-    char** tokens;
-
-    isData = 0;
-    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-
-        if (!key || !value)
-            return 1;
-
-        if (strcmp(currentLine, "-\n") == 0) {
-            if (isData == 0)
-                return 0;
-            else
-                return ftell(file);
-        }
-        tokens = strSplit(currentLine, ':');
-
-        key = tokens[0];
-        value = tokens[1];
-        key = &key[1]; // Supprime la tabulation
-        value = &value[1]; // Supprime le premier espace
-        value[strlen(value) - 1] = '\0'; // Supprime le /n
-
-        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
-            isData = 1;
-    }
-
-    if (isData == 0)
-        return 0;
-    else
-        return ftell(file);
 }
