@@ -3,7 +3,6 @@
 int main() {
     Database *database;
 
-    /* Tables de test */
     Table *table1 = xmalloc(sizeof(Table), __func__);
     Field *field1 = xmalloc(sizeof(Field), __func__);
     Field *field2 = xmalloc(sizeof(Field), __func__);
@@ -62,16 +61,15 @@ int main() {
 
     condition1->key = "surname";
     condition1->value = "El bouchiki";
-    /* Fin des tables de test */
 
-    database = initDatabase("database");
-    useDatabase(database);
+    //database = initDatabase("database");
     //createDatabase(database);
+    //useDatabase(database);
     //createTable(database, table1);
     //addData(database, table1, data1);
     //addData(database, table1, data4);
-    //openFilesForRemoving(database, table1, condition1);
     //openFilesForUpdating(database, table1, data3, condition1);
+    //openFilesForRemoving(database, table1, condition1);
     //selectData(database, table1, field4, condition1); // Mettre un field->name à NULL si on select *, Mettre condition = NULL si on veut pas de condition
     //dropTable(database, table1);
     //dropDatabase(database);

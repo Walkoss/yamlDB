@@ -18,11 +18,7 @@ int displaySingleData(FILE *file, Field *currentField) {
     char currentLine[BUFFER_SIZE];
     char *key;
     char *value;
-    char delim;
-    char delim2;
-
-    delim = ':'; // Char pour parser les lignes key: value \n
-    delim2 = '\n'; // Char pour parser les lignes key: value \n
+    char **tokens;
     
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -34,8 +30,10 @@ int displaySingleData(FILE *file, Field *currentField) {
         if (strcmp(currentLine, "-\n") == 0)
             return 1;
 
-        key = strtok(currentLine, &delim);
-        value = strtok(NULL, &delim2);
+        tokens = strSplit(currentLine, ':');
+
+        key = tokens[0];
+        value = tokens[1];
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
 

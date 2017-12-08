@@ -14,6 +14,9 @@ set(SOURCE_FILES
         sources/field/field.c
         sources/field/field.h
         sources/data/data.c
-        sources/data/data.h sources/select/select.c)
+        sources/data/data.h
+        sources/select/select.c
+        sources/utils/strsplit.c
+        sources/utils/strsplit.h)
 
 add_executable(yamlDB ${SOURCE_FILES})

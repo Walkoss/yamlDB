@@ -57,11 +57,7 @@ int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
     char *key;
     char *value;
     char currentLine[BUFFER_SIZE];
-    char delim;
-    char delim2;
-
-    delim = ':'; // Char pour parser les lignes key: value \n
-    delim2 = '\n'; // Char pour parser les lignes key: value \n
+    char** tokens;
 
     fputs("-\n", fileTmp);
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
@@ -74,8 +70,10 @@ int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
         if (strcmp(currentLine, "-\n") == 0)
             return 0;
 
-        key = strtok(currentLine, &delim);
-        value = strtok(NULL, &delim2);
+        tokens = strSplit(currentLine, ':');
+
+        key = tokens[0];
+        value = tokens[1];
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
 
@@ -83,17 +81,16 @@ int updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
         fputs(key, fileTmp);
         fputs(": ", fileTmp);
 
-        if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0)
+        if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0) {
             fputs(data->value, fileTmp);
+            fputs("\n", fileTmp);
+        }
         else if (strcmp(key, data->field->name) != 0 && strcmp(key, "-\n") != 0)
             fputs(value, fileTmp);
-
-        fputs("\n", fileTmp);
     }
 
     return 0;
 }
-
 
 /**
  * Update data
@@ -120,7 +117,6 @@ void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
         fputs(currentLine, fileTmp);
     }
 }
-
 
 /**
  * Open Files before update data
@@ -190,7 +186,6 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
     }
 }
 
-
 /**
  * Open Files before remove data
  * @param database
@@ -245,13 +240,9 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
     char *value;
     char currentLine[BUFFER_SIZE];
     int isData;
-    char delim;
-    char delim2;
+    char** tokens;
 
     isData = 0;
-    delim = ':'; // Char pour parser les lignes key: value \n
-    delim2 = '\n'; // Char pour parser les lignes key: value \n
-
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -265,11 +256,13 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
             else
                 return ftell(file);
         }
+        tokens = strSplit(currentLine, ':');
 
-        key = strtok(currentLine, &delim);
-        value = strtok(NULL, &delim2);
+        key = tokens[0];
+        value = tokens[1];
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
+        value[strlen(value) - 1] = '\0'; // Supprime le /n
 
         if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
             isData = 1;

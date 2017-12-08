@@ -21,6 +21,7 @@
 #include <ftw.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "../utils/strsplit.h"
 #include "../utils/xmalloc.h"
 #include "../table/table.h"
 #include "../field/field.h"
