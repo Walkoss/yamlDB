@@ -4,10 +4,13 @@ int main() {
     Database *database;
 
     Table *table1 = xmalloc(sizeof(Table), __func__);
+    Table *table2 = xmalloc(sizeof(Table), __func__);
     Field *field1 = xmalloc(sizeof(Field), __func__);
     Field *field2 = xmalloc(sizeof(Field), __func__);
     Field *field3 = xmalloc(sizeof(Field), __func__);
     Field *field4 = xmalloc(sizeof(Field), __func__);
+    Field *field5 = xmalloc(sizeof(Field), __func__);
+    Field *field6 = xmalloc(sizeof(Field), __func__);
     Data *data1 = xmalloc(sizeof(Data), __func__);
     Data *data2 = xmalloc(sizeof(Data), __func__);
     Data *data3 = xmalloc(sizeof(Data), __func__);
@@ -18,7 +21,11 @@ int main() {
 
     table1->name = "user";
     table1->fieldHead = field1;
-    table1->next = NULL;
+    table1->next = table2;
+
+    table2->name = "cars";
+    table2->fieldHead = field1;
+    table2->next = NULL;
 
     field1->name = "name";
     field1->type = VARCHAR;
@@ -56,8 +63,13 @@ int main() {
     data6->field = field3;
     data6->next = NULL;
 
-    field4->name = NULL;
-    field4->next = NULL;
+    field4->name = "surname";
+    field4->type = VARCHAR;
+    field4->next = field5;
+
+    field5->name = "model";
+    field5->type = VARCHAR;
+    field5->next = NULL;
 
     condition1->key = "age";
     condition1->value = "21";
@@ -68,9 +80,10 @@ int main() {
     //createTable(database, table1);
     //addData(database, table1, data1);
     //addData(database, table1, data4);
-    openFilesForUpdating(database, table1, data1, NULL);
+    //openFilesForUpdating(database, table1, data1, NULL);
     //openFilesForRemoving(database, table1, NULL);
-    //selectData(database, table1, field1, NULL); // Mettre un field->name à NULL si on select *, Mettre condition = NULL si on veut pas de condition
+    //selectData(database, table1, field1, NULL); // Mettre un field à NULL si on select *, Mettre condition = NULL si on veut pas de condition
+    openFilesForInnerJoin(database, table1, table2, "surname", "surname", NULL, NULL);
     //dropTable(database, table1);
     //dropDatabase(database);
 

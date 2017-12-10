@@ -39,10 +39,8 @@ long displaySingleData(FILE *file, Field *currentField) {
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
 
-        if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0) {
-            printf("\t");
-            printf("%s: %s", key, value);
-        }
+        if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0)
+            printf("\t%s: %s", key, value);
 
         positionTmp = ftell(file);
     }
@@ -126,7 +124,7 @@ void selectMethod(FILE *file, Field *field, Condition *condition) {
         position = ftell(file);
         if (strcmp(currentLine, "-\n") == 0) {
             if (condition == NULL) {
-                if (field->name == NULL)
+                if (field == NULL)
                     displayAllDataWithoutCondition(file);
                 else
                     fseek(file, BrowseSingleData(file, field), SEEK_SET);
@@ -135,7 +133,7 @@ void selectMethod(FILE *file, Field *field, Condition *condition) {
                 positionTmp = isConditionFulfilled(file, condition);
                 fseek(file, position, SEEK_SET);
                 if (positionTmp != 0) {
-                    if (field->name == NULL)
+                    if (field == NULL)
                         fseek(file, displayAllData(file), SEEK_SET);
                     else
                         fseek(file, BrowseSingleData(file, field), SEEK_SET);
