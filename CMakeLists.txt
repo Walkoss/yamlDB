@@ -20,6 +20,6 @@ set(SOURCE_FILES
         sources/parser/parser.c
         sources/parser/parser.h
         sources/utils/to_lower.c
-        sources/utils/to_lower.h)
+        sources/utils/to_lower.h sources/statement/statement.c sources/statement/statement.h)
 
 add_executable(yamlDB ${SOURCE_FILES})
