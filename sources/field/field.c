@@ -91,6 +91,8 @@ int addFieldsInFile(Database *database, Table *table) {
         field = field->next;
     }
 
+    fclose(file);
+
     initFields(database, table);
 
     return 0;

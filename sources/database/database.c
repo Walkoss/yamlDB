@@ -152,6 +152,7 @@ int dropDatabase(Database *database) {
 
     freeDatabase(database);
     free(path);
+    database = NULL;
     return 0;
 }
 
