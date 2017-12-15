@@ -33,7 +33,7 @@ typedef struct SDatabase {
 
 Database *initDatabase(const char *databaseName);
 int createDatabase(Database *database);
-Database *useDatabase(Database *database);
+int useDatabase(Database *database);
 int dropDatabase(Database *database);
 int freeDatabase(Database *database);
 char *getDatabasePath(const char *databaseName);
