@@ -222,3 +222,200 @@ int stmtDropTable(Parser *parser) {
 
     return 1;
 }
+
+int stmtInsert(Parser *parser) {
+    char *tableName;
+    int valuesCount;
+    int columnsCount;
+
+    valuesCount = 0;
+    columnsCount = 0;
+
+    if (!accept(parser, T_KW_INSERT)) {
+        return 0;
+    }
+
+    if (!accept(parser, T_KW_INTO)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "INTO keyword is missing after INSERT\n");
+        return 0;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "table name is missing after INSERT INTO\n");
+        return 0;
+    }
+
+    tableName = parser->lexer->value;
+    accept(parser, T_LIT_IDENTIFIER);
+
+    // Columns definition (optional)
+    if (accept(parser, T_OP_LPAREN)) {
+        do {
+            if (!is(parser, T_LIT_IDENTIFIER)) {
+                parser->hasError = 1;
+                sprintf(parser->error, "column name is missing\n");
+                return 0;
+            }
+
+            printf("Column name = %s\n", parser->lexer->value);
+            columnsCount++;
+            accept(parser, T_LIT_IDENTIFIER);
+        } while (accept(parser, T_OP_COMMA));
+
+        if (!accept(parser, T_OP_RPAREN)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "right parenthesis missing\n");
+            return 0;
+        }
+    }
+
+    if (!accept(parser, T_KW_VALUES)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "VALUES keyword expected\n");
+        return 0;
+    }
+
+    // Values
+    if (!accept(parser, T_OP_LPAREN)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "left parenthesis missing after VALUES\n");
+        return 0;
+    }
+
+    do {
+        if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
+            !is(parser, T_LIT_INT)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            return 0;
+        }
+
+        printf("Value = %s", parser->lexer->value);
+        valuesCount++;
+        accept(parser, parser->lexer->tok);
+    } while (accept(parser, T_OP_COMMA));
+
+    if (valuesCount != columnsCount) {
+        parser->hasError = 1;
+        sprintf(parser->error, "Values count must be the same as columns count\n");
+        return 0;
+    }
+
+    if (!accept(parser, T_OP_RPAREN)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "right parenthesis missing\n");
+        return 0;
+    }
+
+    if (!accept(parser, T_OP_SEMICOLON)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "';' expecting after %s\n", tableName);
+        return 0;
+    }
+
+    printf("INSERT INTO %s\n", tableName);
+
+    return 1;
+}
+
+
+int stmtUpdate(Parser *parser) {
+    char *tableName;
+
+    if (!accept(parser, T_KW_UPDATE)) {
+        return 0;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "table name is missing after UPDATE\n");
+        return 0;
+    }
+
+    tableName = parser->lexer->value;
+    accept(parser, T_LIT_IDENTIFIER);
+
+    if (!accept(parser, T_KW_SET)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "SET keyword is missing after %s\n", tableName);
+        return 0;
+    }
+
+    do {
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "column name is missing\n");
+            return 0;
+        }
+
+        printf("Column name = %s\n", parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        if (!accept(parser, T_OP_EQUAL)) {
+            parser->hasError = 1;
+            // TODO: set column name here
+            sprintf(parser->error, "'=' is missing after %s\n", "COLUMN NAME");
+            return 0;
+        }
+
+        if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
+            !is(parser, T_LIT_INT)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            return 0;
+        }
+
+        printf("Value = %s\n", parser->lexer->value);
+        accept(parser, parser->lexer->tok);
+    } while (accept(parser, T_OP_COMMA));
+
+
+    if (!accept(parser, T_OP_SEMICOLON)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "';' expecting\n");
+        return 0;
+    }
+
+    // TODO: WHERE CLAUSE
+
+    printf("UPDATE %s\n", tableName);
+
+    return 1;
+}
+
+int stmtDelete(Parser *parser) {
+    char *tableName;
+
+    if (!accept(parser, T_KW_DELETE)) {
+        return 0;
+    }
+
+    if (!accept(parser, T_KW_FROM)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "FROM keyword is missing after DELETE\n");
+        return 0;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "table name is missing after DROP FROM\n");
+        return 0;
+    }
+
+    tableName = parser->lexer->value;
+    accept(parser, T_LIT_IDENTIFIER);
+
+    // TODO: WHERE CLAUSE
+
+    if (!accept(parser, T_OP_SEMICOLON)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "';' expecting\n");
+        return 0;
+    }
+
+    printf("DELETE FROM %s\n", tableName);
+
+    return 1;
+}

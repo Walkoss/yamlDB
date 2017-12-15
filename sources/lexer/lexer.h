@@ -40,4 +40,6 @@ void tokenInspect(Lexer *lexer);
 
 void lexerDisplayError(Lexer *lexer);
 
+int lexerIsEos(Lexer *lexer);
+
 #endif //YAMLDB_LEXER_H

@@ -29,4 +29,13 @@ int stmtDropDatabase(Parser *parser);
 
 int stmtDropTable(Parser *parser);
 
+// INSERT
+int stmtInsert(Parser *parser);
+
+// UPDATE
+int stmtUpdate(Parser *parser);
+
+// DELETE
+int stmtDelete(Parser *parser);
+
 #endif //YAMLDB_STATEMENT_H

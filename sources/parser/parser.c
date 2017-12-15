@@ -12,6 +12,9 @@ const StmtFunction stmtFunctions[] = {
         {stmtCreate},
         {stmtUseDatabase},
         {stmtDrop},
+        {stmtInsert},
+        {stmtUpdate},
+        {stmtDelete},
         {NULL}
 };
 
@@ -43,20 +46,26 @@ void parserDisplayError(Parser *parser) {
 
 void parse(Parser *parser) {
     int i;
+    int stop;
 
-    i = 0;
+    stop = 0;
     getToken(parser->lexer);
-    while (stmtFunctions[i].functionPtr != NULL) {
-        if (!stmtFunctions[i].functionPtr(parser)) {
-            if (parser->lexer->tok == T_ILLEGAL) {
-                lexerDisplayError(parser->lexer);
-                break;
-            } else if (parser->hasError) {
-                parserDisplayError(parser);
-                break;
+    while (!lexerIsEos(parser->lexer) && stop == 0) {
+        i = 0;
+        while (stmtFunctions[i].functionPtr != NULL) {
+            if (!stmtFunctions[i].functionPtr(parser)) {
+                if (parser->lexer->tok == T_ILLEGAL) {
+                    lexerDisplayError(parser->lexer);
+                    stop = 1;
+                    break;
+                } else if (parser->hasError) {
+                    parserDisplayError(parser);
+                    stop = 1;
+                    break;
+                }
             }
+            i++;
         }
-        i++;
     }
 }
 
