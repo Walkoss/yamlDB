@@ -81,7 +81,7 @@ int stmtCreateTable(Parser *parser, Database **database) {
             case T_KW_INT:
                 fieldType = INT;
                 break;
-            case T_LIT_FLOAT:
+            case T_KW_FLOAT:
                 fieldType = FLOAT;
                 break;
             case T_KW_CHAR:
@@ -127,7 +127,7 @@ int stmtCreateTable(Parser *parser, Database **database) {
  */
 int stmtCreate(Parser *parser, Database **database) {
     if (!accept(parser, T_KW_CREATE)) {
-        return 1;
+        return -1;
     }
 
     if (accept(parser, T_KW_DATABASE)) {
@@ -148,7 +148,7 @@ int stmtCreate(Parser *parser, Database **database) {
  */
 int stmtDrop(Parser *parser, Database **database) {
     if (!accept(parser, T_KW_DROP)) {
-        return 1;
+        return -1;
     }
 
     if (accept(parser, T_KW_DATABASE)) {
@@ -170,7 +170,7 @@ int stmtUseDatabase(Parser *parser, Database **database) {
     char *databaseName;
 
     if (!accept(parser, T_KW_USE)) {
-        return 1;
+        return -1;
     }
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
@@ -247,14 +247,16 @@ int stmtDropTable(Parser *parser, Database **database) {
 
 int stmtInsert(Parser *parser, Database **database) {
     char *tableName;
-    int valuesCount;
-    int columnsCount;
+    Data *dataHead;
+    Table *table;
+    Field *fieldHead;
+    Data *data;
 
-    valuesCount = 0;
-    columnsCount = 0;
+    table = NULL;
+    dataHead = NULL;
 
     if (!accept(parser, T_KW_INSERT)) {
-        return 1;
+        return -1;
     }
 
     if (!accept(parser, T_KW_INTO)) {
@@ -271,27 +273,15 @@ int stmtInsert(Parser *parser, Database **database) {
 
     tableName = parser->lexer->value;
     accept(parser, T_LIT_IDENTIFIER);
+    table = findTable(*database, tableName);
 
-    // Columns definition (optional)
-    if (accept(parser, T_OP_LPAREN)) {
-        do {
-            if (!is(parser, T_LIT_IDENTIFIER)) {
-                parser->hasError = 1;
-                sprintf(parser->error, "column name is missing\n");
-                return 1;
-            }
-
-            printf("Column name = %s\n", parser->lexer->value);
-            columnsCount++;
-            accept(parser, T_LIT_IDENTIFIER);
-        } while (accept(parser, T_OP_COMMA));
-
-        if (!accept(parser, T_OP_RPAREN)) {
-            parser->hasError = 1;
-            sprintf(parser->error, "right parenthesis missing\n");
-            return 1;
-        }
+    if (!table) {
+        parser->hasError = 1;
+        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
+        return 1;
     }
+
+    fieldHead = table->fieldHead;
 
     if (!accept(parser, T_KW_VALUES)) {
         parser->hasError = 1;
@@ -314,14 +304,40 @@ int stmtInsert(Parser *parser, Database **database) {
             return 1;
         }
 
-        printf("Value = %s", parser->lexer->value);
-        valuesCount++;
+        if (fieldHead == NULL) {
+            parser->hasError = 1;
+            sprintf(parser->error, "More data than expected\n");
+            return 1;
+        }
+
+        data = xmalloc(sizeof(Data), __func__);
+
+        if (data) {
+            data->value = strdup(parser->lexer->value);
+            data->field = fieldHead;
+            data->next = NULL;
+
+            if ((data->field->type == INT && parser->lexer->tok != T_LIT_INT) ||
+                (data->field->type == FLOAT && parser->lexer->tok != T_LIT_FLOAT) ||
+                (data->field->type == CHAR && parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE) ||
+                (data->field->type == CHAR && strlen(data->value) > 1) ||
+                (data->field->type == VARCHAR &&
+                 (parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE && parser->lexer->tok != T_LIT_STR_DOUBLE_QUOTE))) {
+                parser->hasError = 1;
+                sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)\n", data->value,
+                        fieldHead->name);
+                return 1;
+            }
+        }
+
+        dataListAppend(&dataHead, data);
+        fieldHead = fieldHead->next;
         accept(parser, parser->lexer->tok);
     } while (accept(parser, T_OP_COMMA));
 
-    if (valuesCount != columnsCount) {
+    if (fieldHead != NULL) {
         parser->hasError = 1;
-        sprintf(parser->error, "Values count must be the same as columns count\n");
+        sprintf(parser->error, "Value for field %s is missing\n", fieldHead->name);
         return 1;
     }
 
@@ -337,9 +353,7 @@ int stmtInsert(Parser *parser, Database **database) {
         return 1;
     }
 
-    printf("INSERT INTO %s\n", tableName);
-
-    return 0;
+    return addData(*database, table, dataHead);
 }
 
 
@@ -347,7 +361,7 @@ int stmtUpdate(Parser *parser, Database **database) {
     char *tableName;
 
     if (!accept(parser, T_KW_UPDATE)) {
-        return 1;
+        return -1;
     }
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
@@ -411,7 +425,7 @@ int stmtDelete(Parser *parser, Database **database) {
     char *tableName;
 
     if (!accept(parser, T_KW_DELETE)) {
-        return 1;
+        return -1;
     }
 
     if (!accept(parser, T_KW_FROM)) {

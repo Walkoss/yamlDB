@@ -140,7 +140,12 @@ int freeTable(Database *database, Table *table) {
 int createTable(Database *database, Table *table) {
     char *path;
 
-    if (!database || !table)
+    if (!database) {
+        fprintf(stderr, "You need to use a database\n");
+        return 1;
+    }
+
+    if (!table)
         return 1;
 
     path = getTablePath(database->name, table->name);

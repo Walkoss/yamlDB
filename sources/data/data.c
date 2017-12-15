@@ -30,12 +30,26 @@ int addData(Database *database, Table *table, Data *data) {
 
     currentData = data;
 
-    fprintf(file, "\t-\n");
+    // TODO: fix this...
+    fprintf(file, "-\n");
 
     while (currentData != NULL) {
-        fprintf(file, "\t\t%s: %s\n ", currentData->field->name, currentData->value);
+        fprintf(file, "\t%s: %s\n", currentData->field->name, currentData->value);
         currentData = currentData->next;
     }
 
     return 0;
+}
+
+Data *dataListLast(Data *node) {
+    while (node->next != NULL)
+        node = node->next;
+    return (node);
+}
+
+void dataListAppend(Data **node, Data *newNode) {
+    if (*node != NULL)
+        dataListLast(*node)->next = newNode;
+    else
+        *node = newNode;
 }

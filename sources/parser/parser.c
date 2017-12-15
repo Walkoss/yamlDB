@@ -41,12 +41,13 @@ void parserFree(Parser *parser) {
 }
 
 void parserDisplayError(Parser *parser) {
-    fprintf(stderr, "SyntaxError: %s\n", parser->error);
+    fprintf(stderr, "%s\n", parser->error);
 }
 
 void parse(Parser *parser) {
-    Database* database;
+    Database *database;
     int i;
+    int returnValue;
     int stop;
 
     database = NULL;
@@ -55,16 +56,15 @@ void parse(Parser *parser) {
     while (!lexerIsEos(parser->lexer) && stop == 0) {
         i = 0;
         while (stmtFunctions[i].functionPtr != NULL) {
-            if (stmtFunctions[i].functionPtr(parser, &database) != 0) {
+            returnValue = stmtFunctions[i].functionPtr(parser, &database);
+            if (returnValue != 0 && returnValue != -1) {
                 if (parser->lexer->tok == T_ILLEGAL) {
                     lexerDisplayError(parser->lexer);
-                    stop = 1;
-                    break;
                 } else if (parser->hasError) {
                     parserDisplayError(parser);
-                    stop = 1;
-                    break;
                 }
+                stop = 1;
+                break;
             }
             i++;
         }

@@ -14,4 +14,8 @@ typedef struct SData {
     struct SData *next;
 } Data;
 
+Data *dataListLast(Data *node);
+
+void dataListAppend(Data **node, Data *newNode);
+
 #endif //YAMLDB_DATA_H
