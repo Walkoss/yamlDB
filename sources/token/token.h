@@ -44,7 +44,8 @@ typedef enum {
     T_KW_TABLE,
     T_KW_INT,
     T_KW_FLOAT,
-    T_KW_VARCHAR
+    T_KW_VARCHAR,
+    T_KW_CHAR
 } TokenType;
 
 typedef struct {

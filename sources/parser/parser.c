@@ -45,15 +45,17 @@ void parserDisplayError(Parser *parser) {
 }
 
 void parse(Parser *parser) {
+    Database* database;
     int i;
     int stop;
 
+    database = NULL;
     stop = 0;
     getToken(parser->lexer);
     while (!lexerIsEos(parser->lexer) && stop == 0) {
         i = 0;
         while (stmtFunctions[i].functionPtr != NULL) {
-            if (!stmtFunctions[i].functionPtr(parser)) {
+            if (stmtFunctions[i].functionPtr(parser, &database) != 0) {
                 if (parser->lexer->tok == T_ILLEGAL) {
                     lexerDisplayError(parser->lexer);
                     stop = 1;

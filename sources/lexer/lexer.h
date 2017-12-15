@@ -6,15 +6,16 @@
 **  Description: 
 */
 
+#include "../token/token.h"
+#include "../hash_map/hash_map.h"
+#include "../utils/xmalloc.h"
+#include "../utils/to_lower.h"
+
 #ifndef YAMLDB_LEXER_H
 #define YAMLDB_LEXER_H
 
 #include <stdlib.h>
 #include <ctype.h>
-#include "../token/token.h"
-#include "../utils/xmalloc.h"
-#include "../utils/to_lower.h"
-#include "../hash_map/hash_map.h"
 
 typedef struct {
     char *error;                    // string containing an error if tok == T_ILLEGAL

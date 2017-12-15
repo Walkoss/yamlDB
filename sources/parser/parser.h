@@ -6,6 +6,7 @@
 **  Description: 
 */
 
+#include "../database/database.h"
 #include "../lexer/lexer.h"
 #include "../statement/statement.h"
 
@@ -14,14 +15,13 @@
 
 typedef struct {
     Lexer *lexer;
-    char* error;
+    char *error;
     int hasError;
 } Parser;
 
-typedef struct SStmtFunction
-{
-    int	(*functionPtr)(Parser *);
-}  StmtFunction;
+typedef struct SStmtFunction {
+    int (*functionPtr)(Parser *, Database **);
+} StmtFunction;
 
 Parser *parserInit(char *buffer);
 

@@ -35,12 +35,11 @@ int initFields(Database *database, Table *table) {
                 return 1;
 
             fscanf(file, "%s %d", name, &type);
-            name[strlen(name) - 1]  = '\0'; // To remove the ":"
+            name[strlen(name) - 1] = '\0'; // To remove the ":"
 
             if (strcmp(name, "data") == 0) {
                 break;
-            }
-            else if (strcmp(name, "") != 0) {
+            } else if (strcmp(name, "") != 0) {
                 field->name = name;
                 field->type = type;
                 field->next = table->fieldHead;
@@ -124,4 +123,17 @@ int freeFields(Table *table) {
     free(currentField);
 
     return 0;
+}
+
+Field *fieldListLast(Field *node) {
+    while (node->next != NULL)
+        node = node->next;
+    return (node);
+}
+
+void fieldListAppend(Field **node, Field *newNode) {
+    if (*node != NULL)
+        fieldListLast(*node)->next = newNode;
+    else
+        *node = newNode;
 }

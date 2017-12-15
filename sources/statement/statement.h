@@ -9,33 +9,32 @@
 #ifndef YAMLDB_STATEMENT_H
 #define YAMLDB_STATEMENT_H
 
-#include "../lexer/lexer.h"
 #include "../parser/parser.h"
 
 // CREATE
-int stmtCreate(Parser *parser);
+int stmtCreate(Parser *parser, Database **database);
 
-int stmtCreateDatabase(Parser *parser);
+int stmtCreateDatabase(Parser *parser, Database **database);
 
-int stmtCreateTable(Parser *parser);
+int stmtCreateTable(Parser *parser, Database **database);
 
 // USE
-int stmtUseDatabase(Parser *parser);
+int stmtUseDatabase(Parser *parser, Database **database);
 
 // DROP
-int stmtDrop(Parser *parser);
+int stmtDrop(Parser *parser, Database **database);
 
-int stmtDropDatabase(Parser *parser);
+int stmtDropDatabase(Parser *parser, Database **database);
 
-int stmtDropTable(Parser *parser);
+int stmtDropTable(Parser *parser, Database **database);
 
 // INSERT
-int stmtInsert(Parser *parser);
+int stmtInsert(Parser *parser, Database **database);
 
 // UPDATE
-int stmtUpdate(Parser *parser);
+int stmtUpdate(Parser *parser, Database **database);
 
 // DELETE
-int stmtDelete(Parser *parser);
+int stmtDelete(Parser *parser, Database **database);
 
 #endif //YAMLDB_STATEMENT_H

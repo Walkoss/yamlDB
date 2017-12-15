@@ -49,6 +49,7 @@ void lexerInitTokensHashTable(Lexer *lexer) {
     lexerMakeTokenLiteral(lexer, "int", T_KW_INT);
     lexerMakeTokenLiteral(lexer, "float", T_KW_FLOAT);
     lexerMakeTokenLiteral(lexer, "varchar", T_KW_VARCHAR);
+    lexerMakeTokenLiteral(lexer, "char", T_KW_CHAR);
 }
 
 Lexer *lexerInit(char *buffer) {
@@ -280,7 +281,6 @@ TokenType getToken(Lexer *lexer) {
         return lexerSetTokenType(lexer, T_EOS);
     }
 
-    printf("\n");
     currentCharacter = lexerPeekCharacter(lexer);
 
     // TODO: refactor this using function pointers maybe?
