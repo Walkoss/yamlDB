@@ -22,6 +22,7 @@ void initDefaultValues(GtkDatabase *gtkDatabase)
     gtk_combo_box_set_active(GTK_COMBO_BOX(gtkDatabase->pObject[8]), 0);
     gtk_widget_set_sensitive(gtkDatabase->pObject[4], FALSE);
     gtk_widget_set_sensitive(gtkDatabase->pObject[8], FALSE);
+    gtk_widget_set_sensitive(gtkDatabase->pObject[9], FALSE);
     gtk_widget_set_sensitive(gtkDatabase->pObject[10], FALSE);
 }
 
@@ -384,9 +385,8 @@ void createDatabaseCallback(GtkWidget *pButton, gpointer data)
         if (!createDatabase(gtkDatabase->database)) {
             useDatabase(gtkDatabase->database);
             gtk_label_set_text(GTK_LABEL(gtkDatabase->pObject[6]), gtkDatabase->database->name);
-            gtk_widget_set_sensitive(gtkDatabase->pObject[4], TRUE);
-            gtk_widget_set_sensitive(gtkDatabase->pObject[8], TRUE);
             initTableComboBox(gtkDatabase);
+            gtk_widget_set_sensitive(gtkDatabase->pObject[9], TRUE);
         }
     }
     g_list_free(pList);

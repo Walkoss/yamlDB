@@ -30,14 +30,14 @@ set(SOURCE_FILES
         sources/utils/strsplit.c
         sources/utils/strsplit.h
         sources/select/select.c
-        sources/select/union.c)
+        sources/select/union.c
         sources/interface/interface.c
         sources/interface/interface.h
         sources/interface/interface.c
         sources/interface/interface.h
         sources/gtk/gtk.c
-        sources/gtk/gtk.h)
-        sources/field/field.h
+        sources/gtk/gtk.h
+        sources/field/field.h)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
