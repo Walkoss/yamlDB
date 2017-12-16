@@ -33,32 +33,46 @@ long displaySingleData(FILE *file, Field *currentField, Database *database) {
     char *value;
     char **tokens;
     long positionTmp;
+    SelectedData *data;
+    SelectedData *dataHead;
 
+    dataHead = NULL;
     positionTmp = 0;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data = xmalloc(sizeof(Data), __func__);
 
         if (!key || !value)
             return 1;
 
-        if (strcmp(currentLine, "-\n") == 0)
+        if (strcmp(currentLine, "-\n") == 0) {
+            /*data->value = "-";
+            data->key = NULL;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);*/
+            database->selectedData = dataHead;
             return positionTmp;
+        }
 
         tokens = strSplit(currentLine, ':');
-
         key = tokens[0];
         value = tokens[1];
         key = &key[1]; // Supprime la tabulation
         value = &value[1]; // Supprime le premier espace
+        value[strlen(value+1)] = '\0'; // Supprime l'espace
 
         if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0) {
-            printf("\t%s: %s", key, value);
+            data->value = value;
+            data->key = key;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
         }
 
         positionTmp = ftell(file);
     }
 
+    database->selectedData = dataHead;
     return positionTmp;
 }
 
@@ -75,7 +89,6 @@ long BrowseSingleData(FILE *file, Field *field, Database *database) {
 
     positionTmp = 0;
     currentField = field;
-    printf("-\n");
     while (currentField != NULL) {
         position = ftell(file);
         positionTmp = displaySingleData(file, currentField, database);
@@ -112,7 +125,6 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
             tokens = strSplit(currentLine, ':');
             key = tokens[0];
             value = tokens[1];
-
             key = &key[1]; // Supprime la tabulation
             value = &value[1]; // Supprime le premier espace
             value[strlen(value+1)] = '\0'; // Supprime l'espace
@@ -129,8 +141,8 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
             selectedDataListAppend(&dataHead, data);
         }
     }
-    database->selectedData = dataHead;
 
+    database->selectedData = dataHead;
     return 0;
 }
 
@@ -143,17 +155,48 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
 long displayAllData(FILE *file, Database *database) {
     char currentLine[BUFFER_SIZE];
     long positionTmp;
+    char *key;
+    char *value;
+    char **tokens;
+    SelectedData *data;
+    SelectedData *dataHead;
 
+    dataHead = NULL;
     positionTmp = 0;
-    printf("-\n");
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        if (strcmp(currentLine, "-\n") == 0)
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data = xmalloc(sizeof(Data), __func__);
+        if (strcmp(currentLine, "-\n") == 0) {
+            /*data->value = "-";
+            data->key = NULL;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);*/
+            database->selectedData = dataHead;
             return positionTmp;
+        }
 
-        printf("%s", currentLine);
+        if (!key || !value || !data)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") != 0) {
+            tokens = strSplit(currentLine, ':');
+            key = tokens[0];
+            value = tokens[1];
+            key = &key[1]; // Supprime la tabulation
+            value = &value[1]; // Supprime le premier espace
+            value[strlen(value+1)] = '\0'; // Supprime l'espace
+
+            data->value = value;
+            data->key = key;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
+        }
+
         positionTmp = ftell(file);
     }
 
+    database->selectedData = dataHead;
     return positionTmp;
 }
 
@@ -189,6 +232,7 @@ void selectMethod(FILE *file, Field *field, Condition *condition, Database *data
         }
     }
 
+    /* AFFICHAGE DES DATA */
     while (database->selectedData != NULL) {
         if (database->selectedData->key)
             printf("\t%s: %s\n", database->selectedData->key, database->selectedData->value);
