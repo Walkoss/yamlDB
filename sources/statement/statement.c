@@ -361,7 +361,11 @@ int stmtInsert(Parser *parser, Database **database) {
 
 int stmtUpdate(Parser *parser, Database **database) {
     char *tableName;
+    Table *table;
+    Data *data;
+    Condition *condition;
 
+    condition = NULL;
     if (!accept(parser, T_KW_UPDATE)) {
         return -1;
     }
@@ -374,27 +378,81 @@ int stmtUpdate(Parser *parser, Database **database) {
 
     tableName = parser->lexer->value;
     accept(parser, T_LIT_IDENTIFIER);
+    table = findTable(*database, tableName);
 
-    if (!accept(parser, T_KW_SET)) {
+    if (!table) {
         parser->hasError = 1;
-        sprintf(parser->error, "SET keyword is missing after %s\n", tableName);
+        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
         return 1;
     }
 
-    do {
+    if (!accept(parser, T_KW_SET)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "SET keyword is missing");
+        return 1;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "colum name is missing\n");
+        return 1;
+    }
+
+    data = xmalloc(sizeof(Data), __func__);
+    if (!data)
+        return 1;
+    data->field = findField(table, parser->lexer->value);
+    if (data->field == NULL) {
+        parser->hasError = 1;
+        sprintf(parser->error, "field name %s doesn't exist\n", parser->lexer->value);
+        return 1;
+    }
+    accept(parser, parser->lexer->tok);
+
+    if (!accept(parser, T_OP_EQUAL)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "'=' is expected after %s\n", data->field->name);
+        return 1;
+    }
+
+    if (!is(parser, T_LIT_INT) && !is(parser, T_LIT_FLOAT) && !is(parser, T_LIT_STR_DOUBLE_QUOTE) &&
+        !is(parser, T_LIT_STR_SIMPLE_QUOTE)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "value is missing after '='\n");
+        return 1;
+    }
+
+    if ((data->field->type == INT && parser->lexer->tok != T_LIT_INT) ||
+        (data->field->type == FLOAT && parser->lexer->tok != T_LIT_FLOAT) ||
+        (data->field->type == CHAR && parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE) ||
+        (data->field->type == CHAR && strlen(data->value) > 1) ||
+        (data->field->type == VARCHAR &&
+         (parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE && parser->lexer->tok != T_LIT_STR_DOUBLE_QUOTE))) {
+        parser->hasError = 1;
+        sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)\n", parser->lexer->value,
+                data->field->name);
+        return 1;
+    }
+
+    data->value = strdup(parser->lexer->value);
+    accept(parser, parser->lexer->tok);
+
+    if (accept(parser, T_KW_WHERE)) {
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
             sprintf(parser->error, "column name is missing\n");
             return 1;
         }
 
-        printf("Column name = %s\n", parser->lexer->value);
+        condition = xmalloc(sizeof(Condition), __func__);
+        if (!condition)
+            return 1;
+        condition->key = strdup(parser->lexer->value);
         accept(parser, T_LIT_IDENTIFIER);
 
         if (!accept(parser, T_OP_EQUAL)) {
             parser->hasError = 1;
-            // TODO: set column name here
-            sprintf(parser->error, "'=' is missing after %s\n", "COLUMN NAME");
+            sprintf(parser->error, "'=' is missing after %s\n", condition->key);
             return 1;
         }
 
@@ -405,10 +463,9 @@ int stmtUpdate(Parser *parser, Database **database) {
             return 1;
         }
 
-        printf("Value = %s\n", parser->lexer->value);
+        condition->value = strdup(parser->lexer->value);
         accept(parser, parser->lexer->tok);
-    } while (accept(parser, T_OP_COMMA));
-
+    }
 
     if (!accept(parser, T_OP_SEMICOLON)) {
         parser->hasError = 1;
@@ -416,11 +473,7 @@ int stmtUpdate(Parser *parser, Database **database) {
         return 1;
     }
 
-    // TODO: WHERE CLAUSE
-
-    printf("UPDATE %s\n", tableName);
-
-    return 0;
+    return openFilesForUpdating(*database, table, data, condition);
 }
 
 int stmtDelete(Parser *parser, Database **database) {

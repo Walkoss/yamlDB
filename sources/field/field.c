@@ -27,12 +27,11 @@ int initFieldsInStruct(FILE *file, Table *table, Field *field) {
             return 1;
 
         fscanf(file, "%s %d", name, &type);
-        name[strlen(name) - 1]  = '\0'; // To remove the ":"
+        name[strlen(name) - 1] = '\0'; // To remove the ":"
 
         if (strcmp(name, "data") == 0) {
             break;
-        }
-        else if (strcmp(name, "") != 0) {
+        } else if (strcmp(name, "") != 0) {
             field->name = name;
             field->type = type;
             field->next = table->fieldHead;
@@ -148,4 +147,21 @@ void fieldListAppend(Field **node, Field *newNode) {
         fieldListLast(*node)->next = newNode;
     else
         *node = newNode;
+}
+
+Field *findField(Table *table, const char *fieldName) {
+    Field *currentField;
+
+    if (table == NULL)
+        return NULL;
+
+    currentField = table->fieldHead;
+
+    while (currentField != NULL) {
+        if (strcmp(currentField->name, fieldName) == 0)
+            return currentField;
+        currentField = currentField->next;
+    }
+
+    return NULL;
 }

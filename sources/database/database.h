@@ -67,14 +67,23 @@ int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
 int initFields(Database *database, Table *table);
+
 int initFieldsInStruct(FILE *file, Table *table, Field *field);
+
 int addFieldsInFile(Database *database, Table *table);
 
 int freeFields(Table *table);
 
+Field *findField(Table *table, const char *fieldName);
+
 int addData(Database *database, Table *table, Data *data);
+
 int openFilesForRemoving(Database *database, Table *table, Condition *condition);
+
 void removeData(FILE *file, FILE *filetmp, Condition *condition);
+
 long isConditionFulfilled(FILE *file, Condition *condition);
+
+int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
 
 #endif //YAMLDB_DATABASE_H
