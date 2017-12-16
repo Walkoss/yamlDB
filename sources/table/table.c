@@ -33,7 +33,6 @@ int initTables(Database *database) {
 
             file->d_name[strlen(file->d_name) - 4]  = '\0'; // To remove the ".yml"
             table->name = file->d_name;
-            //TODO : vérifier l'id le plus grand dans les données et rajouter +1
             table->pk = 0;
             table->fieldHead = NULL;
             table->next = database->tableHead;
@@ -117,7 +116,6 @@ int freeTable(Database *database, Table *table) {
     while (currentTable != NULL) {
         if (currentTable->next == table) {
             tableToFree = currentTable->next;
-            currentTable->next = currentTable->next->next;
             free(tableToFree);
         }
         else if (currentTable == table) {
@@ -127,7 +125,6 @@ int freeTable(Database *database, Table *table) {
         }
         currentTable = currentTable->next;
     }
-
     return 0;
 }
 

@@ -41,7 +41,8 @@ int initFields(Database *database, Table *table) {
                 break;
             }
             else if (strcmp(name, "") != 0) {
-                field->name = name;
+                field->name = xmalloc(sizeof(char*), __func__);
+                strcpy(field->name, name);
                 field->type = type;
                 field->next = table->fieldHead;
                 table->fieldHead = field;

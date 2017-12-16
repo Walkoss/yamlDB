@@ -6,20 +6,20 @@
 const TSentences sentences[] =
         {
                 {"Que voulez-vous faire ?"},
-                {"1: Ajouter une base de données"},
-                {"2: Utiliser une base de données"},
-                {"3: Supprimer une base de données"},
-                {"4: Créer une table"},
-                {"5: Supprimer une table"},
+                {"\t1: Ajouter une base de données"},
+                {"\t2: Utiliser une base de données"},
+                {"\t3: Supprimer une base de données"},
+                {"\t4: Créer une table"},
+                {"\t5: Supprimer une table"},
                 {"Entrez le nom de la base de données"},
                 {"Entrez le nom de la table"},
                 {"Entrez le nom du champ à créer"},
                 {"Entrez le type de champ\n(1: INT - 2: FLOAT - 3: CHAR - 4: VARCHAR)"},
                 {"Ajouter un autre champ ? (N / n pour quitter)"},
                 {"Entrez du texte"},
-                {"Ce champ existe déjà."},
-                {"Action réalisée avec succès."},
-                {"Erreur lors de la réalisation de l'action."},
+                {"\033[31mCe champ existe déjà.\033[00m"},
+                {"\033[32mAction réalisée avec succès.\033[00m"},
+                {"\033[31mErreur lors de la réalisation de l'action.\033[00m"},
                 {NULL}
         };
 
@@ -101,6 +101,8 @@ char *getUserInput(int size)
 
     if ((text = xmalloc(sizeof(char) * size + 1, __FUNCTION__)) == NULL)
         return NULL;
+
+    printf("> ");
     while (!i) {
         while ((c = getchar()) != '\n' && c != EOF) {
             if (i < size) {
@@ -112,6 +114,7 @@ char *getUserInput(int size)
             printInstruction(11);
     }
     text[i] = '\0';
+    printf("\n");
 
     return text;
 }
@@ -142,7 +145,7 @@ void printInstruction(int choice)
 Database *preInitDatabase(Database *database, int userChoice)
 {
     char *databaseName;
-    if (database == NULL || userChoice == 2) {
+    if (database == NULL || (userChoice >= 1 && userChoice <= 3) ) {
         printInstruction(6);
         databaseName = getUserInput(50);
         database = initDatabase(databaseName);
@@ -162,8 +165,6 @@ Database *choice(long userChoice, Database *database)
         return database;
     database = preInitDatabase(database, userChoice);
     if (userChoice <= getDatabaseFuncLength()) {
-
-        printf("\ndatabasefunc length: %d\n\n", getDatabaseFuncLength());
         isSuccess(databaseFunc[userChoice - 1].function(database));
         if (userChoice == 3)
         {
@@ -181,7 +182,6 @@ Database *choice(long userChoice, Database *database)
         table1->pk = 0;
         table1->fieldHead = NULL;
         table1->next = NULL;
-        printf("\ntablefunc length: %d\n\n", getTableFuncLength());
         isSuccess(tableFunc[userChoice - getDatabaseFuncLength() - 1].function(database, table1));
         free(tableName);
     }
@@ -254,6 +254,7 @@ char *getFieldName(Table *table)
         printInstruction(8);
         exist = 0;
         fieldName = getUserInput(50);
+        printf("\033c");
         Field *tmp = table->fieldHead;
         if (tmp)
             while (tmp != NULL) {
@@ -292,6 +293,8 @@ FieldType getEnum()
         case 4:
             return VARCHAR;
     }
+
+    return VARCHAR;
 }
 
 /**
@@ -303,9 +306,11 @@ int userInterface()
 {
     Database *database = NULL;
 
+    printf("\033c");
     while (1) {
         printInstruction(-1);
         char *text = getUserInput(5);
+        printf("\033c");
         if (!strcmp(text, "quit"))
         {
             free(text);
