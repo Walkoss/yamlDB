@@ -19,7 +19,6 @@ void initDefaultValues(GtkDatabase *gtkDatabase)
     gtk_entry_set_text(GTK_ENTRY(gtkDatabase->pObject[0]), "");
     gtk_entry_set_text(GTK_ENTRY(gtkDatabase->pObject[2]), "");
 
-    //initTableComboBox(gtkDatabase);
     gtk_combo_box_set_active(GTK_COMBO_BOX(gtkDatabase->pObject[8]), 0);
     gtk_widget_set_sensitive(gtkDatabase->pObject[4], FALSE);
     gtk_widget_set_sensitive(gtkDatabase->pObject[8], FALSE);
@@ -34,6 +33,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table)
 void initTableComboBox(GtkDatabase *gtkDatabase)
 {
     Table *tableTmp;
+    gboolean firstTime = FALSE;
 
     gtk_list_store_clear(gtkDatabase->pTableList);
     if (gtkDatabase->database != NULL && gtkDatabase->database->tableHead == NULL) {
@@ -46,28 +46,21 @@ void initTableComboBox(GtkDatabase *gtkDatabase)
         gtk_widget_set_sensitive(gtkDatabase->pObject[10], FALSE);
     }
     else {
-        printf("2\n");
         tableTmp = gtkDatabase->database->tableHead;
-        printf("3\n");
         gtk_widget_set_sensitive(gtkDatabase->pObject[8], TRUE);                                             // Désactive la comboBox
         gtk_widget_set_sensitive(gtkDatabase->pObject[10], TRUE);
-        printf("4\n");
         while (tableTmp != NULL) {
-            printf("5\n");
             GtkTreeIter iterTable;
-            printf("6\n");
             gchar *tableName = g_malloc(50);
-            printf("7 - %s\n", tableTmp->name);
             strcpy(tableName, tableTmp->name);
-            printf("8\n");
             gtk_list_store_prepend(gtkDatabase->pTableList, &iterTable);
-            printf("9\n");
             gtk_list_store_set(gtkDatabase->pTableList, &iterTable, 0, tableName, -1);
-            printf("10\n");
+            if (!firstTime) {
+                initTableDataStoreList(gtkDatabase, tableTmp);
+                firstTime = TRUE;
+            }
             tableTmp = tableTmp->next;
-            printf("11\n");
             g_free(tableName);
-            printf("12\n");
         }
         gtk_combo_box_set_active(GTK_COMBO_BOX(gtkDatabase->pObject[8]), 0);                    // On focus le premier element de la liste des tables
     }
