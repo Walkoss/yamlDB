@@ -7,6 +7,7 @@
 */
 
 #include "../database/database.h"
+#include "../field/field.h"
 
 /**
  * Initialize the tables in Database structure
@@ -28,18 +29,19 @@ int initTables(Database *database) {
     while ((file = readdir(dir))) {
         if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0) {
             table = xmalloc(sizeof(Table), __func__);
-
             if (!table)
                 return 1;
 
-            file->d_name[strlen(file->d_name) - 4]  = '\0'; // To remove the ".yml"
+            table->name = xmalloc(sizeof(char) * strlen(file->d_name), __func__);
+            if (!table->name)
+                return 1;
+
+            file->d_name[strlen(file->d_name) - 4] = '\0'; // To remove the ".yml"
             //table->name = file->d_name;
-
-            table->name = xmalloc(sizeof(char*), __func__);
             strcpy(table->name, file->d_name);
-
             table->fieldHead = NULL;
             table->next = database->tableHead;
+            //printf("%s\n", table->name);
 
             initFields(database, table);
             database->tableHead = table;
@@ -91,7 +93,7 @@ Table *findTable(Database *database, char *tableName) {
     if (database == NULL)
         return NULL;
 
-    currentTable =  database->tableHead;
+    currentTable = database->tableHead;
 
     while (currentTable != NULL) {
         if (strcmp(currentTable->name, tableName) == 0)
@@ -117,19 +119,26 @@ int freeTable(Database *database, Table *table) {
 
     currentTable = database->tableHead;
 
+    //printf("1\n");
     while (currentTable != NULL) {
         if (currentTable->next == table) {
+            //printf("2\n");
             tableToFree = currentTable->next;
             currentTable->next = currentTable->next->next;
             free(tableToFree);
-        }
-        else if (currentTable == table) {
+            break;
+        } else if (currentTable == table) {
             tableToFree = currentTable;
+            //printf("3\n");
             database->tableHead = currentTable->next;
+            //printf("4\n");
             free(tableToFree);
+            //printf("5\n");
+            break;
         }
         currentTable = currentTable->next;
     }
+    //printf("OK\n");
 
     return 0;
 }
@@ -143,7 +152,12 @@ int freeTable(Database *database, Table *table) {
 int createTable(Database *database, Table *table) {
     char *path;
 
-    if (!database || !table)
+    if (!database) {
+        fprintf(stderr, "You need to use a database\n");
+        return 1;
+    }
+
+    if (!table)
         return 1;
 
     path = getTablePath(database->name, table->name);
@@ -156,8 +170,6 @@ int createTable(Database *database, Table *table) {
         database->tableHead = table;
     } else {
         fprintf(stderr, "The table '%s' already exist\n", table->name);
-        free(path);
-        return 1;
     }
     free(path);
 
@@ -180,7 +192,6 @@ int dropTable(Database *database, Table *table) {
     path = getTablePath(database->name, table->name);
     if (!path)
         return 1;
-
     if (remove(path) == -1) {
         fprintf(stderr, "An error has occured when removing table '%s': "
                 "%s\n", table->name, strerror(errno));

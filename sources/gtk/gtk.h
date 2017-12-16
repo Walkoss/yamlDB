@@ -12,6 +12,7 @@
 typedef struct SGtkDatabase {
     Database *database;
     GtkListStore *pTableList;
+    GtkListStore *pTableDataList;
     GtkWidget *pObject[11];
 } GtkDatabase;
 
@@ -23,7 +24,7 @@ typedef struct SCreateTableDialog {
 } CreateTableDialog;
 
 void onDestroy(GtkWidget *pWidget, gpointer pData);
-void run(int argc, char **argv, Database* database);
+void run(int argc, char **argv);
 void initDatabaseCallback(GtkWidget *pButton, gpointer data);
 void createDatabaseCallback(GtkWidget *pButton, gpointer data);
 void removeDatabaseCallback(GtkWidget *pButton, gpointer data);

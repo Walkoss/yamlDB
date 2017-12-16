@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #include "../utils/xmalloc.h"
 #include "../database/database.h"
-#include "../table/table.h"
 
 typedef struct SDatabaseFunc {
     int (*function)(Database*);
