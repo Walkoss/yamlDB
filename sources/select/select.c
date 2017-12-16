@@ -128,9 +128,8 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
         }
-
-        database->selectedData = data;
     }
+    database->selectedData = dataHead;
 
     return 0;
 }
@@ -188,6 +187,14 @@ void selectMethod(FILE *file, Field *field, Condition *condition, Database *data
                 }
             }
         }
+    }
+
+    while (database->selectedData != NULL) {
+        if (database->selectedData->key)
+            printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
+        else
+            printf("-\n");
+        database->selectedData = database->selectedData->next;
     }
 }
 
