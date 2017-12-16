@@ -139,82 +139,6 @@ int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
 }
 
 /**
- * Update data
- * @param file
- * @param fileTmp
- * @param data
- * @param condition
- * @return
- */
-void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
-    char currentLine[BUFFER_SIZE];
-    long position;
-    long positionTmp;
-
-    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        position = ftell(file);
-
-        if (strcmp(currentLine, "-\n") == 0) {
-            if (condition == NULL) {
-                updateEveryData(file, fileTmp, data);
-                break;
-            }
-            else {
-                positionTmp = isConditionFulfilled(file, condition);
-                fseek(file, position, SEEK_SET);
-                if (positionTmp != 0) {
-                    updateDataOnFile(file, fileTmp, data);
-                }
-            }
-        }
-        fputs(currentLine, fileTmp);
-    }
-}
-
-/**
- * Open Files before update data
- * @param database
- * @param table
- * @param data
- * @param condition
- * @return
- */
-int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition) {
-    FILE *file;
-    FILE *fileTmp;
-    char *path;
-    char *pathTmp;
-
-    if (!database || !table)
-        return 1;
-
-    path = getTablePath(database->name, table->name);
-    pathTmp = strcat(getTablePath(database->name, table->name), "tmp");
-    if (!path || !pathTmp)
-        return 1;
-
-    file = fopen(path, "r+");
-    fileTmp = fopen(pathTmp, "w+");
-    if (!file || !fileTmp) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table->name, strerror(errno));
-        free(path);
-        free(pathTmp);
-        return 1;
-    }
-
-    updateData(file, fileTmp, data, condition);
-
-    fclose(file);
-    fclose(fileTmp);
-    remove(path);
-    rename(pathTmp, path);
-    remove(pathTmp);
-
-    return 0;
-}
-
-/**
  * Remove data on file
  * @param database
  * @param table
@@ -288,4 +212,50 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
     remove(pathTmp);
 
     return 0;
+}
+
+
+/**
+ * Check if the condition is fulfilled
+ * @param file
+ * @param condition
+ * @return 0 if not fulfilled, 1 for error, position is fulfilled
+ */
+long isConditionFulfilled(FILE *file, Condition *condition) {
+    char *key;
+    char *value;
+    char currentLine[BUFFER_SIZE];
+    int isData;
+    char** tokens;
+
+    isData = 0;
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!key || !value)
+            return 1;
+
+        if (strcmp(currentLine, "-\n") == 0) {
+            if (isData == 0)
+                return 0;
+            else
+                return ftell(file);
+        }
+        tokens = strSplit(currentLine, ':');
+
+        key = tokens[0];
+        value = tokens[1];
+        key = &key[1]; // Supprime la tabulation
+        value = &value[1]; // Supprime le premier espace
+        value[strlen(value) - 1] = '\0'; // Supprime le /n
+
+        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
+            isData = 1;
+    }
+
+    if (isData == 0)
+        return 0;
+    else
+        return ftell(file);
 }
