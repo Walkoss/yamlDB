@@ -43,7 +43,7 @@ long displaySingleData(FILE *file, Field *currentField, Database *database) {
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         data = xmalloc(sizeof(Data), __func__);
 
-        if (!key || !value)
+        if (!key || !value || !data)
             return 1;
 
         if (strcmp(currentLine, "-\n") == 0) {
@@ -121,7 +121,6 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
             return 1;
 
         if (strcmp(currentLine, "-\n") != 0) {
-
             tokens = strSplit(currentLine, ':');
             key = tokens[0];
             value = tokens[1];

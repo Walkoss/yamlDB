@@ -33,23 +33,25 @@ int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char
         return 1;
     }
 
-    selectFuncInnerJoin(file, file2, key, key2, field, condition);
+    selectFuncInnerJoin(database, file, file2, key, key2, field, condition);
     return 0;
 }
 
-long displaySecondFile(FILE *file2, char *key2) {
+long displaySecondFile(Database *database, FILE *file2, char *key2, SelectedData *dataHead) {
     char *keyFile;
     char *valueFile;
     char currentLine[BUFFER_SIZE];
     long positionTmp;
     char **tokens;
+    SelectedData *data;
 
     positionTmp = 0;
     while (fgets(currentLine, BUFFER_SIZE, file2) != NULL) {
         keyFile = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         valueFile = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data = xmalloc(sizeof(Data), __func__);
 
-        if (!keyFile || !valueFile)
+        if (!keyFile || !valueFile || !data)
             return 1;
 
         if (strcmp(currentLine, "-\n") == 0)
@@ -61,8 +63,12 @@ long displaySecondFile(FILE *file2, char *key2) {
         valueFile = tokens[1];
         keyFile = &keyFile[1]; // Supprime la tabulation
         valueFile = &valueFile[1]; // Supprime le premier espace
+        valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
 
-        printf("\t%s: %s", keyFile, valueFile);
+        data->value = valueFile;
+        data->key = keyFile;
+        data->next = NULL;
+        selectedDataListAppend(&dataHead, data);
 
         positionTmp = ftell(file2);
     }
@@ -93,12 +99,16 @@ long isKeyInSecondFile(FILE *file2, char *key2, char *value) {
         }
 
         tokens = strSplit(currentLine, ':');
-
         keyFile = tokens[0];
         valueFile = tokens[1];
         keyFile = &keyFile[1]; // Supprime la tabulation
         valueFile = &valueFile[1]; // Supprime le premier espace
+        valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
 
+        /*printf("keyfile : %s\n", keyFile);
+        printf("key : %s\n", key2);
+        printf("valueFile : %s\n", valueFile);
+        printf("value : %s\n", value);*/
         if (strcmp(keyFile, key2) == 0 && strcmp(valueFile, value) == 0 && strcmp(keyFile, "-\n") != 0) {
             isData = 1;
         }
@@ -110,7 +120,7 @@ long isKeyInSecondFile(FILE *file2, char *key2, char *value) {
         return ftell(file2);
 }
 
-void ExploreSecondFile(FILE *file2, char *key2, char *value) {
+void ExploreSecondFile(Database *database, FILE *file2, char *key2, char *value, SelectedData *dataHead) {
     char currentLine[BUFFER_SIZE];
     long position;
     long positionTmp;
@@ -121,54 +131,78 @@ void ExploreSecondFile(FILE *file2, char *key2, char *value) {
             positionTmp = isKeyInSecondFile(file2, key2, value);
             fseek(file2, position, SEEK_SET);
             if (positionTmp != 0) {
-                fseek(file2, displaySecondFile(file2, key2), SEEK_SET);
+                fseek(file2, displaySecondFile(database, file2, key2, dataHead), SEEK_SET);
             }
         }
     }
 }
 
-int innerJoinWithoutConditionWithoutField(FILE *file, FILE *file2, char *key, char *key2) {
+int innerJoinWithoutConditionWithoutField(Database *database, FILE *file, FILE *file2, char *key, char *key2) {
     char currentLine[BUFFER_SIZE];
     char *keyFile;
     char *valueFile;
     char **tokens;
     long positionTmp = ftell(file2);
+    SelectedData *data;
+    SelectedData *dataHead;
 
-    printf("-\n");
+    dataHead = NULL;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         keyFile = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         valueFile = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data = xmalloc(sizeof(Data), __func__);
 
-        if (!keyFile || !valueFile)
+        if (!keyFile || !valueFile || !data)
             return 1;
 
-        printf("%s", currentLine);
-        tokens = strSplit(currentLine, ':');
+        if (strcmp(currentLine, "-\n") != 0) {
+            tokens = strSplit(currentLine, ':');
+            keyFile = tokens[0];
+            valueFile = tokens[1];
+            keyFile = &keyFile[1]; // Supprime la tabulation
+            valueFile = &valueFile[1]; // Supprime le premier espace
+            valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
 
-        keyFile = tokens[0];
-        valueFile = tokens[1];
-        keyFile = &keyFile[1]; // Supprime la tabulation
-        valueFile = &valueFile[1]; // Supprime le premier espace
+            data->value = valueFile;
+            data->key = keyFile;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
+        }
+        else {
+            data->value = "-";
+            data->key = NULL;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
+        }
 
         if (strcmp(keyFile, key) == 0 && strcmp(keyFile, "-\n") != 0) {
-            ExploreSecondFile(file2, key2, valueFile);
+            ExploreSecondFile(database, file2, key2, valueFile, dataHead);
             fseek(file2, positionTmp, SEEK_SET);
         }
     }
 
+    database->selectedData = dataHead;
     return 0;
 }
 
-void selectFuncInnerJoin(FILE *file, FILE *file2, char *key, char *key2, Field *field, Condition *condition) {
+void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key, char *key2, Field *field, Condition *condition) {
     char currentLine[BUFFER_SIZE];
 
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         if (strcmp(currentLine, "-\n") == 0) {
             if (condition == NULL) {
                 if (field == NULL) {
-                    innerJoinWithoutConditionWithoutField(file, file2, key, key2);
+                    innerJoinWithoutConditionWithoutField(database, file, file2, key, key2);
                 }
             }
         }
+    }
+    /* AFFICHAGE DES DATA */
+    while (database->selectedData != NULL) {
+        if (database->selectedData->key)
+            printf("\t%s: %s\n", database->selectedData->key, database->selectedData->value);
+        else
+            printf("-\n");
+        database->selectedData = database->selectedData->next;
     }
 }
