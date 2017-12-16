@@ -50,17 +50,17 @@ int freeDatabase(Database *database) {
 /**
  * Initialize a Database with tables and fields
  * @param database
- * @return a Database
+ * @return 0 if success, 1 for error
  */
-Database *useDatabase(Database *database) {
+int useDatabase(Database *database) {
     char *path;
 
     if (!database)
-        return NULL;
+        return 1;
 
     path = getDatabasePath(database->name);
     if (!path)
-        return NULL;
+        return 1;
 
     if (access(path, 0) == 0) { // If directory exist
         if (database->isUsed == 0) {
@@ -68,13 +68,15 @@ Database *useDatabase(Database *database) {
             initTables(database);
         } else {
             fprintf(stderr, "Error : you are already using this database\n");
+            return 1;
         }
     } else {
         fprintf(stderr, "An error has occured when opening database '%s': "
                 "%s\n", database->name, strerror(errno));
+        return 1;
     }
 
-    return database;
+    return 0;
 }
 
 /**
@@ -152,6 +154,7 @@ int dropDatabase(Database *database) {
 
     freeDatabase(database);
     free(path);
+    database = NULL;
     return 0;
 }
 
