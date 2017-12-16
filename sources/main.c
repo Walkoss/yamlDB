@@ -3,66 +3,88 @@
 int main() {
     Database *database;
 
-    /* Tables de test */
     Table *table1 = xmalloc(sizeof(Table), __func__);
+    Table *table2 = xmalloc(sizeof(Table), __func__);
     Field *field1 = xmalloc(sizeof(Field), __func__);
     Field *field2 = xmalloc(sizeof(Field), __func__);
+    Field *field3 = xmalloc(sizeof(Field), __func__);
+    Field *field4 = xmalloc(sizeof(Field), __func__);
+    Field *field5 = xmalloc(sizeof(Field), __func__);
+    Field *field6 = xmalloc(sizeof(Field), __func__);
     Data *data1 = xmalloc(sizeof(Data), __func__);
     Data *data2 = xmalloc(sizeof(Data), __func__);
+    Data *data3 = xmalloc(sizeof(Data), __func__);
+    Data *data4 = xmalloc(sizeof(Data), __func__);
+    Data *data5 = xmalloc(sizeof(Data), __func__);
+    Data *data6 = xmalloc(sizeof(Data), __func__);
     Condition *condition1 = xmalloc(sizeof(Condition), __func__);
 
-    condition1->key = "field1";
-    condition1->value = "1998";
-
-    table1->name = "table1";
-    table1->pk = 0;
+    table1->name = "user";
     table1->fieldHead = field1;
-    table1->next = NULL;
+    table1->next = table2;
 
-    field1->name = "field1";
-    field1->type = INT;
-    field1->next = field2;
-
-    field2->name = "field2";
-    field2->type = VARCHAR;
-    field2->next = NULL;
-
-    data1->value = "1994";
-    data1->field = field1;
-    data1->next = data2;
-
-    data2->value = "test";
-    data2->field = field2;
-    data2->next = NULL;
-
-    Table *table2 = xmalloc(sizeof(Table), __func__);
-    Field *field3 = xmalloc(sizeof(Field), __func__);
-    Data *data3 = xmalloc(sizeof(Data), __func__);
-
-    table2->name = "table2";
-    table2->pk = 0;
-    table2->fieldHead = field3;
+    table2->name = "cars";
+    table2->fieldHead = field1;
     table2->next = NULL;
 
-    field3->name = "field3";
+    field1->name = "name";
+    field1->type = VARCHAR;
+    field1->next = field2;
+
+    field2->name = "surname";
+    field2->type = VARCHAR;
+    field2->next = field3;
+
+    field3->name = "age";
     field3->type = INT;
     field3->next = NULL;
 
-    data3->value = "2017";
+    data1->value = "Alexis";
+    data1->field = field1;
+    data1->next = data2;
+
+    data2->value = "Petrillo";
+    data2->field = field2;
+    data2->next = data3;
+
+    data3->value = "21";
     data3->field = field3;
     data3->next = NULL;
-    /* Fin des tables de test */
+
+    data4->value = "Walid";
+    data4->field = field1;
+    data4->next = data5;
+
+    data5->value = "El bouchiki";
+    data5->field = field2;
+    data5->next = data6;
+
+    data6->value = "20";
+    data6->field = field3;
+    data6->next = NULL;
+
+    field4->name = "surname";
+    field4->type = VARCHAR;
+    field4->next = field5;
+
+    field5->name = "model";
+    field5->type = VARCHAR;
+    field5->next = NULL;
+
+    condition1->key = "age";
+    condition1->value = "21";
 
     database = initDatabase("database");
     //createDatabase(database);
     useDatabase(database);
     //createTable(database, table1);
-    //createTable(database, table2);
     //addData(database, table1, data1);
-    removeData(database, table1, condition1);
-    //debugDatabase(database);
+    //addData(database, table1, data4);
+    //openFilesForUpdating(database, table1, data1, NULL);
+    //openFilesForRemoving(database, table1, NULL);
+    //selectData(database, table1, field1, NULL); // Mettre un field à NULL si on select *, Mettre condition = NULL si on veut pas de condition
+    openFilesForInnerJoin(database, table1, table2, "surname", "surname", NULL, NULL);
     //dropTable(database, table1);
-    //dropTable(database, table2);
     //dropDatabase(database);
 
     return 0;

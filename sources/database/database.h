@@ -21,6 +21,7 @@
 #include <ftw.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "../utils/strsplit.h"
 #include "../utils/xmalloc.h"
 #include "../table/table.h"
 #include "../field/field.h"
@@ -49,11 +50,28 @@ int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
 int initFields(Database *database, Table *table);
+int initFieldsInStruct(FILE *file, Table *table, Field *field);
 int addFieldsInFile(Database *database, Table *table);
 int freeFields(Table *table);
 
 int addData(Database *database, Table *table, Data *data);
-int removeData(Database *database, Table *table, Condition *condition);
-long removeDataFromFile(FILE *file, Condition *condition);
+int openFilesForRemoving(Database *database, Table *table, Condition *condition);
+int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
+void removeData(FILE *file, FILE *filetmp, Condition *condition);
+void updateData(FILE *file, FILE *filetmp, Data *data, Condition *condition);
+long updateDataOnFile(FILE *file, FILE *fileTmp, Data *data);
+
+int selectData(Database *database, Table *table, Field *field, Condition *condition);
+void selectMethod(FILE *file, Field *field, Condition *condition);
+long displayAllData(FILE *file);
+int displayAllDataWithoutCondition(FILE *file);
+long BrowseSingleData(FILE *file, Field *field);
+long displaySingleData(FILE *file, Field *currentField);
+long isConditionFulfilled(FILE *file, Condition *condition);
+
+int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char *key, char *key2, void *field,
+                          void *condition);
+void selectFuncInnerJoin(FILE *file, FILE *file2, char* key, char* key2, Field *field, Condition *condition);
+int innerJoin(Table *table1, Table *table2, char* key, char* key2, Field *field, Condition *condition);
 
 #endif //YAMLDB_DATABASE_H
