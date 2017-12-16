@@ -15,6 +15,7 @@ const StmtFunction stmtFunctions[] = {
         {stmtInsert},
         {stmtUpdate},
         {stmtDelete},
+        {stmtSelect},
         {NULL}
 };
 

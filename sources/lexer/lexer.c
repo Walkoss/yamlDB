@@ -32,11 +32,17 @@ void lexerInitTokensHashTable(Lexer *lexer) {
     lexerMakeTokenLiteral(lexer, ";", T_OP_SEMICOLON);
     lexerMakeTokenLiteral(lexer, ",", T_OP_COMMA);
     lexerMakeTokenLiteral(lexer, "=", T_OP_EQUAL);
+    lexerMakeTokenLiteral(lexer, "*", T_OP_ASTERISK);
+    lexerMakeTokenLiteral(lexer, ".", T_OP_DOT);
 
     // Keywords
     lexerMakeTokenLiteral(lexer, "create", T_KW_CREATE);
     lexerMakeTokenLiteral(lexer, "drop", T_KW_DROP);
     lexerMakeTokenLiteral(lexer, "use", T_KW_USE);
+    lexerMakeTokenLiteral(lexer, "select", T_KW_SELECT);
+    lexerMakeTokenLiteral(lexer, "left", T_KW_LEFT);
+    lexerMakeTokenLiteral(lexer, "join", T_KW_JOIN);
+    lexerMakeTokenLiteral(lexer, "on", T_KW_ON);
     lexerMakeTokenLiteral(lexer, "insert", T_KW_INSERT);
     lexerMakeTokenLiteral(lexer, "into", T_KW_INTO);
     lexerMakeTokenLiteral(lexer, "values", T_KW_VALUES);
@@ -291,12 +297,12 @@ TokenType getToken(Lexer *lexer) {
                 lexer,
                 readLiteralString(lexer, currentCharacter)
         );
+    } else if (lexerIsOperator(lexer)) {
+        return lexerSetTokenType(lexer, readOperator(lexer));
     } else if (isalpha(currentCharacter) || currentCharacter == '_') {
         return lexerSetTokenType(lexer, readIdentifierOrKeyword(lexer));
     } else if (isdigit(currentCharacter) || currentCharacter == '.') {
         return lexerSetTokenType(lexer, readNumber(lexer));
-    } else if (lexerIsOperator(lexer)) {
-        return lexerSetTokenType(lexer, readOperator(lexer));
     }
     // TODO handle special char '\n \t'
     sprintf(lexer->error, "Unexpected character '%c'", currentCharacter);

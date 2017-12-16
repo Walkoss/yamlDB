@@ -254,7 +254,6 @@ int stmtInsert(Parser *parser, Database **database) {
     Field *fieldHead;
     Data *data;
 
-    table = NULL;
     dataHead = NULL;
 
     if (!accept(parser, T_KW_INSERT)) {
@@ -546,4 +545,244 @@ int stmtDelete(Parser *parser, Database **database) {
     }
 
     return openFilesForRemoving(*database, table, condition);
+}
+
+int stmtSelect(Parser *parser, Database **database) {
+    char *tableName;
+    char *fieldName;
+    Table *table;
+    Condition *condition;
+    Field *fieldHead;
+    Field *fieldHeadCopy;
+    Field *field;
+    int asteriskMode;
+
+    condition = NULL;
+    asteriskMode = 0;
+    if (!accept(parser, T_KW_SELECT)) {
+        return -1;
+    }
+
+    if (accept(parser, T_OP_ASTERISK)) {
+        fieldHead = NULL;
+        asteriskMode = 1;
+    } else {
+        fieldHead = NULL;
+        do {
+            if (!is(parser, T_LIT_IDENTIFIER)) {
+                parser->hasError = 1;
+                sprintf(parser->error, "field name is missing\n");
+                return 1;
+            }
+
+            fieldName = strdup(parser->lexer->value);
+            accept(parser, T_LIT_IDENTIFIER);
+
+            field = xmalloc(sizeof(Field), __func__);
+            if (field) {
+                field->name = fieldName;
+                field->next = NULL;
+            }
+
+            fieldListAppend(&fieldHead, field);
+        } while (accept(parser, T_OP_COMMA));
+    }
+
+    if (!accept(parser, T_KW_FROM)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "FROM keyword is missing\n");
+        return 1;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "table name is missing after DROP FROM\n");
+        return 1;
+    }
+
+    tableName = parser->lexer->value;
+    accept(parser, T_LIT_IDENTIFIER);
+    table = findTable(*database, tableName);
+
+    if (!table) {
+        parser->hasError = 1;
+        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
+        return 1;
+    }
+
+    fieldHeadCopy = fieldHead;
+    while (fieldHeadCopy != NULL) {
+        if (findField(table, fieldHeadCopy->name) == NULL) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field name %s doesn't exist\n", fieldHead->name);
+            return 1;
+        }
+        fieldHeadCopy = fieldHeadCopy->next;
+    }
+
+    if (accept(parser, T_KW_LEFT)) {
+        Table *joinTable;
+        Field *field1;
+        Field *field2;
+        char *string;
+
+        if (!asteriskMode) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Only '*' is allowed for sql joins\n");
+            return 1;
+        }
+
+        if (!accept(parser, T_KW_JOIN)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "JOIN keyword is missing\n");
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "table name for sql joins is missing\n");
+            return 1;
+        }
+
+        string = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+        joinTable = findTable(*database, string);
+
+        if (joinTable == table || joinTable == NULL) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Table %s for sql joins doesn't exist or is the same as the original table\n",
+                    string);
+            return 1;
+        }
+
+        if (!accept(parser, T_KW_ON)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "ON keyword is missing after %s\n", string);
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Table is missing after ON keyword (table.id)\n");
+            return 1;
+        }
+
+        string = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        if (findTable(*database, string) != table) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Table %s for sql joins must be %s\n",
+                    string, tableName);
+            return 1;
+        }
+
+        if (!accept(parser, T_OP_DOT)) {
+            printf("%s\n", tokenTypeAsString(parser->lexer->tok));
+            parser->hasError = 1;
+            sprintf(parser->error, "expected '.' after %s\n", string);
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field name is missing after %s.\n", string);
+            return 1;
+        }
+
+        string = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        field1 = findField(table, string);
+        if (!field1) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field %s doesn't exist in table %s.\n", string, table->name);
+            return 1;
+        }
+
+        if (!accept(parser, T_OP_EQUAL)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "'=' expected after %s.\n", string);
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Table is missing after '=' (table.id)\n");
+            return 1;
+        }
+
+        string = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        if (findTable(*database, string) != joinTable) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Table %s for sql joins must be %s\n",
+                    string, joinTable->name);
+            return 1;
+        }
+
+        if (!accept(parser, T_OP_DOT)) {
+            printf("%s\n", tokenTypeAsString(parser->lexer->tok));
+            parser->hasError = 1;
+            sprintf(parser->error, "expected '.' after %s\n", string);
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field name is missing after %s.\n", string);
+            return 1;
+        }
+
+        string = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        field2 = findField(joinTable, string);
+        if (!field2) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field %s doesn't exist in table %s.\n", string, joinTable->name);
+            return 1;
+        }
+
+        return openFilesForInnerJoin(*database, table, joinTable, field1->name, field2->name, NULL, NULL);
+    }
+
+    if (accept(parser, T_KW_WHERE)) {
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "column name is missing\n");
+            return 1;
+        }
+
+        condition = xmalloc(sizeof(Condition), __func__);
+        if (!condition)
+            return 1;
+        condition->key = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        if (!accept(parser, T_OP_EQUAL)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "'=' is missing after %s\n", condition->key);
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
+            !is(parser, T_LIT_INT)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            return 1;
+        }
+
+        condition->value = strdup(parser->lexer->value);
+        accept(parser, parser->lexer->tok);
+    }
+
+    if (!accept(parser, T_OP_SEMICOLON)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "';' expecting\n");
+        return 1;
+    }
+
+    return selectData(*database, table, fieldHead, condition);
 }

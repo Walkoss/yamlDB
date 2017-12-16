@@ -86,4 +86,23 @@ long isConditionFulfilled(FILE *file, Condition *condition);
 
 int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
 
+int selectData(Database *database, Table *table, Field *field, Condition *condition);
+
+void selectMethod(FILE *file, Field *field, Condition *condition);
+
+long displayAllData(FILE *file);
+
+int displayAllDataWithoutCondition(FILE *file);
+
+long BrowseSingleData(FILE *file, Field *field);
+
+long displaySingleData(FILE *file, Field *currentField);
+
+int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char *key, char *key2, void *field,
+                          void *condition);
+
+void selectFuncInnerJoin(FILE *file, FILE *file2, char *key, char *key2, Field *field, Condition *condition);
+
+int innerJoin(Table *table1, Table *table2, char *key, char *key2, Field *field, Condition *condition);
+
 #endif //YAMLDB_DATABASE_H

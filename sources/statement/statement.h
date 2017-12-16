@@ -37,4 +37,7 @@ int stmtUpdate(Parser *parser, Database **database);
 // DELETE
 int stmtDelete(Parser *parser, Database **database);
 
+// SELECT
+int stmtSelect(Parser *parser, Database **database);
+
 #endif //YAMLDB_STATEMENT_H

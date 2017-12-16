@@ -28,11 +28,17 @@ typedef enum {
     T_OP_SEMICOLON, // ;
     T_OP_COMMA, // ,
     T_OP_EQUAL, // =
+    T_OP_ASTERISK, // *
+    T_OP_DOT, // .
 
     //  Database keywords
     T_KW_CREATE,
     T_KW_DROP,
     T_KW_USE,
+    T_KW_SELECT,
+    T_KW_LEFT,
+    T_KW_JOIN,
+    T_KW_ON,
     T_KW_INSERT,
     T_KW_INTO,
     T_KW_VALUES,
