@@ -9,8 +9,6 @@
 #ifndef YAMLDB_TABLE_H
 #define YAMLDB_TABLE_H
 
-#include "../field/field.h"
-
 typedef struct STable {
     char *name;
     unsigned int pk;

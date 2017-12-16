@@ -15,14 +15,12 @@
  */
 Database *initDatabase(const char *databaseName) {
     Database *database;
-    char *databaseNameCopy;
 
     database = xmalloc(sizeof(Table), __func__);
-    databaseNameCopy = xmalloc(sizeof(strlen(databaseName)) + 1, __func__);
 
-    if (database && databaseNameCopy) {
+    if (database) {
         database->isUsed = 0;
-        database->name = strcpy(databaseNameCopy, databaseName);
+        database->name = strdup(databaseName);
         database->tableHead = NULL;
     }
 
@@ -34,7 +32,6 @@ Database *initDatabase(const char *databaseName) {
  * @param database
  * @return 0 if success, 1 for error
  */
-// TODO: Vérifier les fonctions free
 int freeDatabase(Database *database) {
     if (!database)
         return 1;
@@ -50,17 +47,17 @@ int freeDatabase(Database *database) {
 /**
  * Initialize a Database with tables and fields
  * @param database
- * @return a Database
+ * @return 0 if success 1 otherwise
  */
-Database *useDatabase(Database *database) {
+int useDatabase(Database *database) {
     char *path;
 
     if (!database)
-        return NULL;
+        return 1;
 
     path = getDatabasePath(database->name);
     if (!path)
-        return NULL;
+        return 1;
 
     if (access(path, 0) == 0) { // If directory exist
         if (database->isUsed == 0) {
@@ -74,7 +71,7 @@ Database *useDatabase(Database *database) {
                 "%s\n", database->name, strerror(errno));
     }
 
-    return database;
+    return 0;
 }
 
 /**

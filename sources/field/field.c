@@ -14,40 +14,50 @@
  * @param table
  * @return 0 if success, 1 for error
  */
-int initFields(Database *database, Table *table) {
-    Field *field;
-    FILE *file;
+int initFieldsInStruct(FILE *file, Table *table, Field *field) {
+    FieldType type;
     char currentLine[BUFFER_SIZE];
     char *name;
-    FieldType type;
+
+    while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
+        field = xmalloc(sizeof(Field), __func__);
+        name = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+
+        if (!field || !name)
+            return 1;
+
+        fscanf(file, "%s %d", name, &type);
+        name[strlen(name) - 1] = '\0'; // To remove the ":"
+
+        if (strcmp(name, "data") == 0) {
+            break;
+        } else if (strcmp(name, "") != 0) {
+            field->name = name;
+            field->type = type;
+            field->next = table->fieldHead;
+            table->fieldHead = field;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Catching error before initializing the fields
+ * @param database
+ * @param table
+ * @return 0 if success, 1 for error
+ */
+int initFields(Database *database, Table *table) {
+    FILE *file;
+    Field *field;
 
     if (!database || !table)
         return 1;
 
     file = fopen(getTablePath(database->name, table->name), "r");
-
     if (file != NULL) {
-        while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-            field = xmalloc(sizeof(Field), __func__);
-            name = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-
-            if (!field || !name)
-                return 1;
-
-            fscanf(file, "%s %d", name, &type);
-            name[strlen(name) - 1]  = '\0'; // To remove the ":"
-
-            if (strcmp(name, "data") == 0) {
-                break;
-            }
-            else if (strcmp(name, "") != 0) {
-                field->name = name;
-                field->type = type;
-                field->next = table->fieldHead;
-                table->fieldHead = field;
-            }
-        }
-
+        initFieldsInStruct(file, table, field);
         fclose(file);
     } else {
         fprintf(stderr, "An error has occured when init fields '%s': "
@@ -70,7 +80,12 @@ int addFieldsInFile(Database *database, Table *table) {
     FILE *file;
     char *path;
 
+    if (!database || !table)
+        return 1;
+
     path = getTablePath(database->name, table->name);
+    if (!path)
+        return 1;
 
     file = fopen(path, "w+");
     if (!file) {
@@ -80,9 +95,6 @@ int addFieldsInFile(Database *database, Table *table) {
         return 1;
     }
 
-    if (!path || !database || !table || !file)
-        return 1;
-
     field = table->fieldHead;
     fprintf(file, "fields:\n");
 
@@ -91,6 +103,7 @@ int addFieldsInFile(Database *database, Table *table) {
         field = field->next;
     }
 
+    fprintf(file, "data:\n");
     initFields(database, table);
 
     return 0;
@@ -121,4 +134,34 @@ int freeFields(Table *table) {
     free(currentField);
 
     return 0;
+}
+
+Field *fieldListLast(Field *node) {
+    while (node->next != NULL)
+        node = node->next;
+    return (node);
+}
+
+void fieldListAppend(Field **node, Field *newNode) {
+    if (*node != NULL)
+        fieldListLast(*node)->next = newNode;
+    else
+        *node = newNode;
+}
+
+Field *findField(Table *table, const char *fieldName) {
+    Field *currentField;
+
+    if (table == NULL)
+        return NULL;
+
+    currentField = table->fieldHead;
+
+    while (currentField != NULL) {
+        if (strcmp(currentField->name, fieldName) == 0)
+            return currentField;
+        currentField = currentField->next;
+    }
+
+    return NULL;
 }

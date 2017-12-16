@@ -9,10 +9,11 @@
 #ifndef YAMLDB_FIELD_H
 #define YAMLDB_FIELD_H
 
+#include <string.h>
+
 #define MAX_FIELD_NAME_SIZE 128
 
 typedef enum EFieldType {
-    PK = 1,
     INT,
     FLOAT,
     CHAR,
@@ -24,5 +25,9 @@ typedef struct SField {
     FieldType type;
     struct SField *next;
 } Field;
+
+Field *fieldListLast(Field *node);
+
+void fieldListAppend(Field **node, Field *newNode);
 
 #endif //YAMLDB_FIELD_H
