@@ -1,6 +1,7 @@
 //
 // Created by Iliasse Wahbi on 14/11/2017.
 //
+#include <glib.h>
 #include "interface.h"
 
 const TSentences sentences[] =
@@ -48,6 +49,14 @@ void isSuccess(int result)
         printInstruction(13);
     else
         printInstruction(14);
+}
+
+char *isSuccessGtk(int result)
+{
+    if (!result)
+        return sentences[13].sentence;
+    else
+        return sentences[14].sentence;
 }
 
 /**
@@ -139,7 +148,7 @@ void printInstruction(int choice)
  * @param database, table, name
  * @return Database*
  */
-Database *preInitDatabase(Database *database, int userChoice)
+Database *preInitDatabase(Database *database, long userChoice)
 {
     char *databaseName;
     if (database == NULL || userChoice == 2) {
@@ -158,32 +167,28 @@ Database *preInitDatabase(Database *database, int userChoice)
  */
 Database *choice(long userChoice, Database *database)
 {
-    if (userChoice < 0 || userChoice > (getTableFuncLength() + getDatabaseFuncLength()))
+    if (userChoice <= 0 || userChoice > (getTableFuncLength() + getDatabaseFuncLength()))
         return database;
     database = preInitDatabase(database, userChoice);
     if (userChoice <= getDatabaseFuncLength()) {
 
-        printf("\ndatabasefunc length: %d\n\n", getDatabaseFuncLength());
         isSuccess(databaseFunc[userChoice - 1].function(database));
         if (userChoice == 3)
-        {
-            Database *newDatabase = NULL;
-            database = newDatabase;
-        }
+            database = NULL;
     }
     else
     {
         printInstruction(7);
         char *tableName = getUserInput(50);
+        Table *table = xmalloc(sizeof(Table), __func__);
 
-        Table *table1 = xmalloc(sizeof(Table), __func__);
-        table1->name = tableName;
-        table1->pk = 0;
-        table1->fieldHead = NULL;
-        table1->next = NULL;
-        printf("\ntablefunc length: %d\n\n", getTableFuncLength());
-        isSuccess(tableFunc[userChoice - getDatabaseFuncLength() - 1].function(database, table1));
-        free(tableName);
+        table->name = tableName;
+        table->pk = 0;
+        table->fieldHead = NULL;
+        table->next = NULL;
+        isSuccess(tableFunc[userChoice - getDatabaseFuncLength() - 1].function(database, table));
+        if (userChoice != 5)
+            free(tableName);
     }
 
     return database;
@@ -222,8 +227,11 @@ Database *createField(Database *database, Table *table, char *name)
 {
     Field *field = xmalloc(sizeof(Field), __func__);
 
-    field->name = name;
-    field->type = getEnum();
+    if (!field)
+        return database;
+    field->name = xmalloc(sizeof(char*), __func__);
+    strcpy(field->name, name);
+    field->type = getEnum(0);
     field->next = NULL;
     if (table->fieldHead == NULL)
         table->fieldHead = field;
@@ -272,9 +280,8 @@ char *getFieldName(Table *table)
  * Gets user input and begins processes
  * @return FieldType
  */
-FieldType getEnum()
+FieldType getEnum(long type)
 {
-    long type = 0;
     while (type <= 0 || type >= 5) {
         printInstruction(9);
         char *numberChar = getUserInput(2);
@@ -291,7 +298,10 @@ FieldType getEnum()
             return CHAR;
         case 4:
             return VARCHAR;
+        default:
+            return INT;
     }
+    return INT;
 }
 
 /**
@@ -315,6 +325,5 @@ int userInterface()
             database = choice(strtol(text, NULL, 10), database);
         free(text);
     }
-    freeDatabase(database);
     return 0;
 }

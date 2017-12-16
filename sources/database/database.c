@@ -68,10 +68,12 @@ int useDatabase(Database *database) {
             initTables(database);
         } else {
             fprintf(stderr, "Error : you are already using this database\n");
+            return 1;
         }
     } else {
         fprintf(stderr, "An error has occured when opening database '%s': "
                 "%s\n", database->name, strerror(errno));
+        return 1;
     }
 
     return 0;
