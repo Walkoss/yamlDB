@@ -191,7 +191,7 @@ void selectMethod(FILE *file, Field *field, Condition *condition, Database *data
 
     while (database->selectedData != NULL) {
         if (database->selectedData->key)
-            printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
+            printf("\t%s: %s\n", database->selectedData->key, database->selectedData->value);
         else
             printf("-\n");
         database->selectedData = database->selectedData->next;
