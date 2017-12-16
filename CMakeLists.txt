@@ -26,6 +26,9 @@ set(SOURCE_FILES
         sources/utils/to_lower.c
         sources/utils/to_lower.h
         sources/statement/statement.c
-        sources/statement/statement.h)
+        sources/statement/statement.h
+        sources/data/data.h
+        sources/utils/strsplit.c
+        sources/utils/strsplit.h)
 
 add_executable(yamlDB ${SOURCE_FILES})

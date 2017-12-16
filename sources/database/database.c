@@ -32,7 +32,6 @@ Database *initDatabase(const char *databaseName) {
  * @param database
  * @return 0 if success, 1 for error
  */
-// TODO: Vérifier les fonctions free
 int freeDatabase(Database *database) {
     if (!database)
         return 1;

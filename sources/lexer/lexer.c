@@ -43,6 +43,7 @@ void lexerInitTokensHashTable(Lexer *lexer) {
     lexerMakeTokenLiteral(lexer, "update", T_KW_UPDATE);
     lexerMakeTokenLiteral(lexer, "set", T_KW_SET);
     lexerMakeTokenLiteral(lexer, "delete", T_KW_DELETE);
+    lexerMakeTokenLiteral(lexer, "where", T_KW_WHERE);
     lexerMakeTokenLiteral(lexer, "from", T_KW_FROM);
     lexerMakeTokenLiteral(lexer, "database", T_KW_DATABASE);
     lexerMakeTokenLiteral(lexer, "table", T_KW_TABLE);

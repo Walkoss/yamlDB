@@ -7,6 +7,8 @@
 */
 
 #include "statement.h"
+#include "../parser/parser.h"
+#include "../lexer/lexer.h"
 
 /**
  * Create Database Statement ("CREATE DATABASE databaseName;")
@@ -423,7 +425,10 @@ int stmtUpdate(Parser *parser, Database **database) {
 
 int stmtDelete(Parser *parser, Database **database) {
     char *tableName;
+    Table *table;
+    Condition *condition;
 
+    condition = NULL;
     if (!accept(parser, T_KW_DELETE)) {
         return -1;
     }
@@ -442,8 +447,44 @@ int stmtDelete(Parser *parser, Database **database) {
 
     tableName = parser->lexer->value;
     accept(parser, T_LIT_IDENTIFIER);
+    table = findTable(*database, tableName);
 
-    // TODO: WHERE CLAUSE
+    if (!table) {
+        parser->hasError = 1;
+        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
+        return 1;
+    }
+
+    if (accept(parser, T_KW_WHERE)) {
+        if (!is(parser, T_LIT_IDENTIFIER)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "column name is missing\n");
+            return 1;
+        }
+
+        condition = xmalloc(sizeof(Condition), __func__);
+        if (!condition)
+            return 1;
+        condition->key = strdup(parser->lexer->value);
+        accept(parser, T_LIT_IDENTIFIER);
+
+        if (!accept(parser, T_OP_EQUAL)) {
+            parser->hasError = 1;
+            // TODO: set column name here
+            sprintf(parser->error, "'=' is missing after %s\n", "COLUMN NAME");
+            return 1;
+        }
+
+        if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
+            !is(parser, T_LIT_INT)) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            return 1;
+        }
+
+        condition->value = strdup(parser->lexer->value);
+        accept(parser, parser->lexer->tok);
+    }
 
     if (!accept(parser, T_OP_SEMICOLON)) {
         parser->hasError = 1;
@@ -451,7 +492,5 @@ int stmtDelete(Parser *parser, Database **database) {
         return 1;
     }
 
-    printf("DELETE FROM %s\n", tableName);
-
-    return 0;
+    return openFilesForRemoving(*database, table, condition);
 }

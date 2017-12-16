@@ -39,6 +39,7 @@ typedef enum {
     T_KW_UPDATE,
     T_KW_FROM,
     T_KW_SET,
+    T_KW_WHERE,
     T_KW_DELETE,
     T_KW_DATABASE,
     T_KW_TABLE,

@@ -14,6 +14,11 @@ typedef struct SData {
     struct SData *next;
 } Data;
 
+typedef struct SCondition {
+    char *key;
+    char *value;
+} Condition;
+
 Data *dataListLast(Data *node);
 
 void dataListAppend(Data **node, Data *newNode);

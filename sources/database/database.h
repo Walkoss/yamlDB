@@ -26,6 +26,11 @@
 #include <ftw.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "../utils/strsplit.h"
+#include "../utils/xmalloc.h"
+#include "../table/table.h"
+#include "../field/field.h"
+#include "../data/data.h"
 
 typedef struct SDatabase {
     char *name;
@@ -62,11 +67,14 @@ int freeTables(Database *database);
 char *getTablePath(const char *databaseName, const char *tableName);
 
 int initFields(Database *database, Table *table);
-
+int initFieldsInStruct(FILE *file, Table *table, Field *field);
 int addFieldsInFile(Database *database, Table *table);
 
 int freeFields(Table *table);
 
 int addData(Database *database, Table *table, Data *data);
+int openFilesForRemoving(Database *database, Table *table, Condition *condition);
+void removeData(FILE *file, FILE *filetmp, Condition *condition);
+long isConditionFulfilled(FILE *file, Condition *condition);
 
 #endif //YAMLDB_DATABASE_H

@@ -31,6 +31,7 @@ TokenHash tokens[] = {
         {.token = T_KW_VALUES, .value = "values"},
         {.token = T_KW_UPDATE, .value = "update"},
         {.token = T_KW_SET, .value = "set"},
+        {.token = T_KW_WHERE, .value = "where"},
         {.token = T_KW_DELETE, .value = "delete"},
         {.token = T_KW_FROM, .value = "from"},
         {.token = T_KW_DATABASE, .value = "database"},

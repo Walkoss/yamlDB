@@ -14,7 +14,6 @@
 #define MAX_FIELD_NAME_SIZE 128
 
 typedef enum EFieldType {
-    PK = 1,
     INT,
     FLOAT,
     CHAR,
