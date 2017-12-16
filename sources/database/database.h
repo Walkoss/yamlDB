@@ -36,6 +36,7 @@ typedef struct SDatabase {
     char *name;
     int isUsed;
     struct STable *tableHead;
+    struct SSelectedData *selectedData;
 } Database;
 
 Database *initDatabase(const char *databaseName);
@@ -88,15 +89,15 @@ int openFilesForUpdating(Database *database, Table *table, Data *data, Condition
 
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
 
-void selectMethod(FILE *file, Field *field, Condition *condition);
+void selectMethod(FILE *file, Field *field, Condition *condition, Database *database);
 
-long displayAllData(FILE *file);
+long displayAllData(FILE *file, Database *database);
 
-int displayAllDataWithoutCondition(FILE *file);
+int displayAllDataWithoutCondition(FILE *file, Database *database);
 
-long BrowseSingleData(FILE *file, Field *field);
+long BrowseSingleData(FILE *file, Field *field, Database *database);
 
-long displaySingleData(FILE *file, Field *currentField);
+long displaySingleData(FILE *file, Field *currentField, Database *database);
 
 int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char *key, char *key2, void *field,
                           void *condition);
