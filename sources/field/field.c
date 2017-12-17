@@ -126,16 +126,27 @@ int freeFields(Table *table) {
 
     currentField = table->fieldHead;
 
-    while (currentField->next != NULL) {
+    // La boucle suivante ne free pas correctement. Elle fait segfault lorsqu'on fait un initDatabase plusieurs fois
+    /*while (currentField->next != NULL) {
+        printf("1\n");
         fieldToFree = currentField->next;
+        printf("2\n");
         table->fieldHead = currentField;
+        printf("3\n");
+        currentField = currentField->next;
+        printf("4\n");
+        free(fieldToFree);
+        printf("5\n");
+    }*/
+
+    while (currentField != NULL) {
+        fieldToFree = currentField;
         currentField = currentField->next;
         free(fieldToFree);
     }
 
     table->fieldHead = NULL;
     free(currentField);
-
     return 0;
 }
 

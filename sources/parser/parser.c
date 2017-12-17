@@ -45,19 +45,17 @@ void parserDisplayError(Parser *parser) {
     fprintf(stderr, "%s\n", parser->error);
 }
 
-void parse(Parser *parser) {
-    Database *database;
+void parse(Parser *parser, Database **database) {
     int i;
     int returnValue;
     int stop;
 
-    database = NULL;
     stop = 0;
     getToken(parser->lexer);
     while (!lexerIsEos(parser->lexer) && stop == 0) {
         i = 0;
         while (stmtFunctions[i].functionPtr != NULL) {
-            returnValue = stmtFunctions[i].functionPtr(parser, &database);
+            returnValue = stmtFunctions[i].functionPtr(parser, database);
             if (returnValue != 0 && returnValue != -1) {
                 if (parser->lexer->tok == T_ILLEGAL) {
                     lexerDisplayError(parser->lexer);
@@ -70,6 +68,16 @@ void parse(Parser *parser) {
             i++;
         }
     }
+
+    /*if ((*database)->selectedData)
+        printf("%s: %s\n", (*database)->selectedData->key, (*database)->selectedData->value);
+    while ((*database)->selectedData != NULL) {
+        if ((*database)->selectedData->key)
+            printf("%s: %s\n", (*database)->selectedData->key, (*database)->selectedData->value);
+        else
+            printf("-\n");
+        (*database)->selectedData = (*database)->selectedData->next;
+    }*/
 }
 
 int is(Parser *parser, TokenType tokenType) {

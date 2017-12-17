@@ -8,12 +8,17 @@
 
 #include <gtk/gtk.h>
 #include "../interface/interface.h"
+#include "../parser/parser.h"
 
 typedef struct SGtkDatabase {
     Database *database;
     GtkListStore *pTableList;
     GtkListStore *pTableDataList;
-    GtkWidget *pObject[11];
+    gboolean tableDataExist;
+    gulong comboxBoxSignalChanged;
+    GtkWidget *pTableDataBox;
+    GtkWidget *pTableDataListView;
+    GtkWidget *pObject[14];
 } GtkDatabase;
 
 typedef struct SCreateTableDialog {
@@ -37,4 +42,6 @@ void addFieldNewTableCallback(GtkWidget *pButton, gpointer data);
 void updateInformationLabel(GtkDatabase *gtkDatabase, char *message);
 void initFieldsComboBox(CreateTableDialog *createTableDialog);
 char *getEnumName(FieldType type);
+void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *request);
+void onActiveItemChangerComboBox(GtkWidget *comboBox, gpointer data);
 Table *getTableFromDatabase(GtkDatabase *gtkDatabase, char *tableName);

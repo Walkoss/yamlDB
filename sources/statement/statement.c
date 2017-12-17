@@ -557,6 +557,10 @@ int stmtSelect(Parser *parser, Database **database) {
     Field *field;
     int asteriskMode;
 
+    // iliasse
+    (*database)->selectedData = NULL;
+    // fin iliasse
+
     condition = NULL;
     asteriskMode = 0;
     if (!accept(parser, T_KW_SELECT)) {

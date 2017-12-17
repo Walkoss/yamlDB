@@ -45,6 +45,8 @@ int addData(Database *database, Table *table, Data *data) {
         currentData = currentData->next;
     }
 
+    fclose(file);
+
     return 0;
 }
 

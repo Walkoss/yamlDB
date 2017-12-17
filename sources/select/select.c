@@ -92,20 +92,19 @@ long BrowseSingleData(FILE *file, Field *field, Database *database) {
  */
 int displayAllDataWithoutCondition(FILE *file, Database *database) {
     char currentLine[BUFFER_SIZE];
-    char *key;
-    char *value;
     char **tokens;
-    SelectedData *data;
     SelectedData *dataHead;
-
     dataHead = NULL;
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-        data = xmalloc(sizeof(Data), __func__);
+        char *key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        char *value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        SelectedData *data = xmalloc(sizeof(SelectedData), __func__);
 
         if (!key || !value || !data)
             return 1;
+
+        data->value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data->key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
 
         if (strcmp(currentLine, "-\n") != 0) {
 
@@ -117,13 +116,13 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
             value = &value[1]; // Supprime le premier espace
             value[strlen(value+1)] = '\0'; // Supprime l'espace
 
-            data->value = value;
-            data->key = key;
+            strcpy(data->value, value);
+            strcpy(data->key, key);
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
         }
         else {
-            data->value = "-";
+            strcpy(data->value, "-");
             data->key = NULL;
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
@@ -131,6 +130,13 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
     }
     database->selectedData = dataHead;
 
+    /*while (database->selectedData != NULL) {
+        if (database->selectedData->key)
+            printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
+        else
+            printf("-\n");
+        database->selectedData = database->selectedData->next;
+    }*/
     return 0;
 }
 
@@ -189,13 +195,13 @@ void selectMethod(FILE *file, Field *field, Condition *condition, Database *data
         }
     }
 
-    while (database->selectedData != NULL) {
+    /*while (database->selectedData != NULL) {
         if (database->selectedData->key)
             printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
         else
             printf("-\n");
         database->selectedData = database->selectedData->next;
-    }
+    }*/
 }
 
 /**

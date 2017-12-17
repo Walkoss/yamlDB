@@ -66,7 +66,6 @@ int freeTables(Database *database) {
         return 1;
 
     currentTable = database->tableHead;
-
     while (currentTable != NULL) {
         tableToFree = currentTable->next;
         database->tableHead = currentTable;
@@ -77,7 +76,6 @@ int freeTables(Database *database) {
 
     database->tableHead = NULL;
     free(currentTable);
-
     return 0;
 }
 
