@@ -7,6 +7,7 @@
 */
 
 #include "lexer.h"
+#include "../print_color/print_color.h"
 
 void lexerMakeTokenLiteral(Lexer *lexer, char *keyword, TokenType type) {
     TokenHash *tokenHash;
@@ -59,10 +60,10 @@ Lexer *lexerInit(char *buffer) {
     lexer = xmalloc(sizeof(Lexer), __func__);
     if (lexer != NULL) {
         lexer->error = xmalloc(MAX_LEXICAL_VALUE, __func__);
-        lexer->cur = T_EOS;
+        lexer->cur = T_INIT;
         lexer->lineNb = 1;
         lexer->curPos = 1;
-        lexer->tok = T_EOS;
+        lexer->tok = T_INIT;
         lexer->value = xmalloc(MAX_LEXICAL_VALUE, __func__);
         lexer->buffer = buffer;
         lexer->cursor = 0;
@@ -118,8 +119,8 @@ int lexerIsEos(Lexer *lexer) {
 }
 
 void lexerDisplayError(Lexer *lexer) {
-    fprintf(stderr, "SyntaxError: %s at line %zd and position %zd",
-            lexer->error, lexer->lineNb, lexer->curPos);
+    fprintf(stderr, "%sSyntaxError: %s at line %zd and position %zd%s",
+            COLOR_RED, lexer->error, lexer->lineNb, lexer->curPos, COLOR_RESET);
 }
 
 void tokenInspect(Lexer *lexer) {

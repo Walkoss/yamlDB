@@ -30,6 +30,8 @@ set(SOURCE_FILES
         sources/data/data.h
         sources/utils/strsplit.c
         sources/utils/strsplit.h
-        sources/interface/interface.c)
+        sources/interface/interface.c
+        sources/print_color/print_color.c
+        sources/print_color/print_color.h)
 
 add_executable(yamlDB ${SOURCE_FILES})

@@ -86,6 +86,6 @@ long isConditionFulfilled(FILE *file, Condition *condition);
 
 int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
 
-char *getUserInput(int size);
+char *getUserInput();
 
 #endif //YAMLDB_DATABASE_H

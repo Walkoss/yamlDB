@@ -1,23 +1,34 @@
 #include "parser/parser.h"
+#include "print_color/print_color.h"
 
 int main(int argc, char **argv) {
+    Database *database;
     Parser *parser;
-    char *text;
+    char *sqlQuery;
+    int parseResult;
+    int stop;
 
-    printf("\033c");
-    while (1) {
-        printf("Entrez votre requête SQL\n");
-        text = getUserInput(9999);
-        if (!strcmp(text, "quit")) {
-            free(text);
-            break;
-        }
-        else if (text[0] != '\0') {
-            parser = parserInit(text);
-            parse(parser);
+    stop = 0;
+    print_color(COLOR_YELLOW, "Welcome to YamlDB [Part 2]\n");
+    print_color(COLOR_YELLOW, "Write your SQL query\n");
+    while (stop == 0) {
+        print_color(COLOR_YELLOW, "\n~> ");
+        sqlQuery = getUserInput();
+        if (sqlQuery[0] == '\0') {
+            print_error_color("Please enter a SQL Query\n");
+        } else if (!strcmp(sqlQuery, "quit")) {
+            print_color(COLOR_YELLOW, "\nSee you next time, hope you enjoyed our database :)\n");
+            stop = 1;
+        } else {
+            parser = parserInit(sqlQuery);
+            parseResult = parse(parser, &database);
+            if (parseResult != 0) {
+                parserFree(parser);
+                return parseResult;
+            }
             parserFree(parser);
         }
-        free(text);
+        free(sqlQuery);
     }
 
     return 0;
