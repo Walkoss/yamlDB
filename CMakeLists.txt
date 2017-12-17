@@ -31,6 +31,7 @@ set(SOURCE_FILES
         sources/utils/strsplit.c
         sources/utils/strsplit.h
         sources/select/select.c
-        sources/select/union.c)
+        sources/select/union.c
+        sources/interface/interface.c)
 
 add_executable(yamlDB ${SOURCE_FILES})
