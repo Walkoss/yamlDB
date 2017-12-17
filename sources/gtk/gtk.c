@@ -57,7 +57,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
     // Création de la requete sql si on affiche toutes les données d'une seule table
     if (request == NULL)
     {
-        sql = xmalloc(sizeof(char) * strlen(table->name), __func__);
+        sql = xmalloc(sizeof(char) * (strlen(table->name) + strlen(gtkDatabase->database->name) + 30), __func__);
         strcpy(sql, "USE ");
         strcat(sql, gtkDatabase->database->name);
         strcat(sql, ";SELECT * FROM ");
@@ -74,7 +74,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         parserFree(parser);
     }
 
-    if (database->selectedData)
+    if (database && database->selectedData)
     {
         // On récupère la première liste de valeur pour obtenir la key/valuedans le bon ordre
         SelectedData *selectedDataTmp = database->selectedData;
