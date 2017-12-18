@@ -74,11 +74,8 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
     char currentLine[BUFFER_SIZE];
     long position;
     long positionTmp;
-    char *prevLine;
 
-    prevLine = "";
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        printf("PREVLINE = %s\nCURRENTLINE = %s\n", prevLine, currentLine);
         position = ftell(file);
 
         if (strcmp(currentLine, "\t-\n") == 0) {
@@ -96,9 +93,7 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
                 fseek(file, positionTmp, SEEK_SET);
             }
         }
-        if (strcmp(prevLine, "data:\n") != 0)
-            fputs(currentLine, fileTmp);
-        prevLine = strdup(currentLine);
+        fputs(currentLine, fileTmp);
     }
 }
 
@@ -305,6 +300,7 @@ void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
                 positionTmp = isConditionFulfilled(file, condition);
                 fseek(file, position, SEEK_SET);
                 if (positionTmp != 0) {
+                    fputs("\t-\n", fileTmp);
                     updateDataOnFile(file, fileTmp, data);
                 }
             }
