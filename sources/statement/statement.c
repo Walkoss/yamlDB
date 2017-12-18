@@ -736,6 +736,8 @@ int stmtSelect(Parser *parser, Database **database) {
             return 1;
         }
 
+        accept(parser, T_OP_SEMICOLON);
+
         return openFilesForInnerJoin(*database, table, joinTable, field1->name, field2->name, NULL, NULL);
     }
 
