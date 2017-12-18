@@ -117,7 +117,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         gtkDatabase->pTableDataListView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gtkDatabase->pTableDataList));
 
         // On ajoute les colonnes, on les nomme et on leur donne une position
-        selectedDataTmp = database->selectedData;
+        /*selectedDataTmp = database->selectedData;
         for (int i = 0; (selectedDataTmp != NULL && selectedDataTmp->key); i++) {
             i = (i == 3) ? 0 : i;
             if (selectedDataTmp->key) {
@@ -126,8 +126,46 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
                 gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
             }
             selectedDataTmp = selectedDataTmp->next;
+        }*/
+
+        Field *fieldTmp = table->fieldHead;
+        for(int i = 0; fieldTmp != NULL; i++)
+        {
+            cellDataRenderer = gtk_cell_renderer_text_new();
+            columnDataList = gtk_tree_view_column_new_with_attributes(fieldTmp->name, cellDataRenderer, "text", i, NULL);
+            gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
+            fieldTmp = fieldTmp->next;
         }
 
+        gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
+        gtk_widget_show(gtkDatabase->pTableDataListView);
+        gtkDatabase->tableDataExist = TRUE;
+    }
+    else
+    {
+        if (gtkDatabase->tableDataExist) {
+            gtk_widget_destroy(gtkDatabase->pTableDataListView);
+            gtkDatabase->tableDataExist = FALSE;
+        }
+        Field *fieldTmp = table->fieldHead;
+        while (fieldTmp != NULL)
+        {
+            column++;
+            fieldTmp = fieldTmp->next;
+        }
+        columnsType = g_new0(GType, column);
+        for (int i = 0; i < column; i++)
+            columnsType[i] = G_TYPE_STRING;
+        gtkDatabase->pTableDataList = gtk_list_store_newv(column, columnsType);
+        gtkDatabase->pTableDataListView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gtkDatabase->pTableDataList));
+        fieldTmp = table->fieldHead;
+        for (int i = 0; fieldTmp != NULL; i++)
+        {
+            cellDataRenderer = gtk_cell_renderer_text_new();
+            columnDataList = gtk_tree_view_column_new_with_attributes(fieldTmp->name, cellDataRenderer, "text", i, NULL);
+            gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
+            fieldTmp = fieldTmp->next;
+        }
         gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
         gtk_widget_show(gtkDatabase->pTableDataListView);
         gtkDatabase->tableDataExist = TRUE;
@@ -275,6 +313,19 @@ void addFieldNewTableCallback(GtkWidget *pButton, gpointer data)
         instanceMessageDialog(pButton, "Entrez le nom de la table et du champ");
         return;
     }
+
+    // Vérification de la présence d'un champ avec un nom identique
+    Field *fieldTmp = createTableDialog->table->fieldHead;
+    while (fieldTmp != NULL)
+    {
+        if (!strcmp(fieldTmp->name, fieldName))
+        {
+            instanceMessageDialog(pButton, "Un champ avec le même nom à déjà été ajouté.");
+            return;
+        }
+        fieldTmp = fieldTmp->next;
+    }
+
     radioList = gtk_radio_button_get_group(GTK_RADIO_BUTTON(createTableDialog->pObject[2]));
     while (radioList)
     {
@@ -363,8 +414,6 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
     tableShowingInformationsHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     radioHbox1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-    // Ensure that the dialog box is destroyed when the user responds
-
     //g_signal_connect_swapped (dialog, "response", G_CALLBACK (gtk_widget_destroy), dialog);
 
     gtk_window_set_default_size(&(GTK_DIALOG(dialog)->window), 500, 350);
@@ -424,6 +473,8 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
     createTableDialog->table->next = NULL;
     createTableDialog->fieldCount = 0;
 
+    initFieldsComboBox(createTableDialog);
+
     gtk_widget_show_all(dialog);
 
     switch (gtk_dialog_run(GTK_DIALOG(dialog)))
@@ -435,6 +486,12 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
                 int result;
                 strcpy(createTableDialog->table->name, gtk_entry_get_text(GTK_ENTRY(createTableDialog->pObject[1])));
                 result = createTable(gtkDatabase->database, createTableDialog->table);
+                // réinitialisation de la database
+                Database *database = initDatabase(gtkDatabase->database->name);
+                useDatabase(database);
+                freeDatabase(gtkDatabase->database);
+                gtkDatabase->database = database;
+                // fin de la réinitialisation
                 updateInformationLabel(gtkDatabase, isSuccessGtk(result));
                 initTableComboBox(gtkDatabase);
             }
@@ -445,7 +502,6 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
             gtk_widget_destroy(dialog);
             break;
         default:
-            printf("Rien ?\n");
             gtk_widget_destroy(dialog);
             break;
     }
