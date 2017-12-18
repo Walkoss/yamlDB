@@ -8,6 +8,7 @@
 
 #include "../database/database.h"
 #include "../field/field.h"
+#include "../print_color/print_color.h"
 
 /**
  * Initialize the tables in Database structure
@@ -21,24 +22,29 @@ int initTables(Database *database) {
 
     dir = opendir(getDatabasePath(database->name));
     if (!dir) {
-        fprintf(stderr, "An error has occured when opening database '%s': "
-                "%s\n", database->name, strerror(errno));
+        sprintf(error, "%sAn error has occured when opening database '%s': "
+                "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         return 1;
     }
 
     while ((file = readdir(dir))) {
         if (strcmp(file->d_name, ".") != 0 && strcmp(file->d_name, "..") != 0) {
             table = xmalloc(sizeof(Table), __func__);
-
             if (!table)
                 return 1;
 
+            table->name = xmalloc(sizeof(char) * strlen(file->d_name), __func__);
+            if (!table->name)
+                return 1;
+
             file->d_name[strlen(file->d_name) - 4] = '\0'; // To remove the ".yml"
-            table->name = file->d_name;
+            strcpy(table->name, file->d_name);
             table->fieldHead = NULL;
             table->next = database->tableHead;
 
-            initFields(database, table);
+            if (initFields(database, table) != 0) {
+                return 1;
+            }
             database->tableHead = table;
         }
     }
@@ -61,7 +67,6 @@ int freeTables(Database *database) {
         return 1;
 
     currentTable = database->tableHead;
-
     while (currentTable != NULL) {
         tableToFree = currentTable->next;
         database->tableHead = currentTable;
@@ -72,7 +77,6 @@ int freeTables(Database *database) {
 
     database->tableHead = NULL;
     free(currentTable);
-
     return 0;
 }
 
@@ -85,8 +89,10 @@ int freeTables(Database *database) {
 Table *findTable(Database *database, char *tableName) {
     Table *currentTable;
 
-    if (database == NULL)
+    if (!database || !database->isUsed) {
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return NULL;
+    }
 
     currentTable = database->tableHead;
 
@@ -96,6 +102,7 @@ Table *findTable(Database *database, char *tableName) {
         currentTable = currentTable->next;
     }
 
+    sprintf(error, "%sTable %s doesn't exist\n%s", COLOR_RED, tableName, COLOR_RESET);
     return NULL;
 }
 
@@ -119,10 +126,12 @@ int freeTable(Database *database, Table *table) {
             tableToFree = currentTable->next;
             currentTable->next = currentTable->next->next;
             free(tableToFree);
+            break;
         } else if (currentTable == table) {
             tableToFree = currentTable;
             database->tableHead = currentTable->next;
             free(tableToFree);
+            break;
         }
         currentTable = currentTable->next;
     }
@@ -139,8 +148,8 @@ int freeTable(Database *database, Table *table) {
 int createTable(Database *database, Table *table) {
     char *path;
 
-    if (!database) {
-        fprintf(stderr, "You need to use a database\n");
+    if (!database || !database->isUsed) {
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return 1;
     }
 
@@ -156,7 +165,9 @@ int createTable(Database *database, Table *table) {
         addFieldsInFile(database, table);
         database->tableHead = table;
     } else {
-        fprintf(stderr, "The table '%s' already exist\n", table->name);
+        sprintf(error, "%sThe table '%s' already exist\n%s", COLOR_RED, table->name, COLOR_RESET);
+        free(path);
+        return 1;
     }
     free(path);
 
@@ -173,16 +184,20 @@ int createTable(Database *database, Table *table) {
 int dropTable(Database *database, Table *table) {
     char *path;
 
-    if (!database || !table)
+    if (!database || !database->isUsed) {
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
+        return 1;
+    }
+
+    if (!table)
         return 1;
 
     path = getTablePath(database->name, table->name);
     if (!path)
         return 1;
-
     if (remove(path) == -1) {
-        fprintf(stderr, "An error has occured when removing table '%s': "
-                "%s\n", table->name, strerror(errno));
+        sprintf(error, "%sAn error has occured when removing table '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
 
         free(path);
         return 1;

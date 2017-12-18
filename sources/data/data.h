@@ -14,6 +14,12 @@ typedef struct SData {
     struct SData *next;
 } Data;
 
+typedef struct SSelectedData {
+    char *value;
+    char *key;
+    struct SSelectedData *next;
+} SelectedData;
+
 typedef struct SCondition {
     char *key;
     char *value;

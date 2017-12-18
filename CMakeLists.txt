@@ -12,7 +12,6 @@ set(SOURCE_FILES
         sources/table/table.c
         sources/table/table.h
         sources/field/field.c
-        sources/field/field.h
         sources/data/data.c
         sources/data/data.h
         sources/token/token.c
@@ -31,6 +30,21 @@ set(SOURCE_FILES
         sources/utils/strsplit.c
         sources/utils/strsplit.h
         sources/select/select.c
-        sources/select/union.c)
+        sources/select/union.c
+        sources/interface/interface.c
+        sources/interface/interface.h
+        sources/gtk/gtk.c
+        sources/gtk/gtk.h
+        sources/print_color/print_color.c
+        sources/print_color/print_color.h)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+
+include_directories(${GTK3_INCLUDE_DIRS})
+link_directories(${GTK3_LIBRARY_DIRS})
+
+add_definitions(${GTK3_CFLAGS_OTHER})
 add_executable(yamlDB ${SOURCE_FILES})
+
+target_link_libraries(yamlDB ${GTK3_LIBRARIES})

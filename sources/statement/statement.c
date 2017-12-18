@@ -11,6 +11,55 @@
 #include "../lexer/lexer.h"
 
 /**
+ * Use Database Statement ("USE databaseName;")
+ * @param parser
+ */
+int stmtUseDatabase(Parser *parser, Database **database) {
+    char *databaseName;
+
+    if (!accept(parser, T_KW_USE)) {
+        return -1;
+    }
+
+    if (!is(parser, T_LIT_IDENTIFIER)) {
+        parser->hasError = 1;
+        sprintf(parser->error, "database name is missing after USE keyword");
+        return 1;
+    }
+
+    databaseName = strdup(parser->lexer->value);
+    accept(parser, T_LIT_IDENTIFIER);
+
+    accept(parser, T_OP_SEMICOLON);
+
+    if (*database == NULL || strcmp((*database)->name, databaseName) != 0)
+        *database = initDatabase(databaseName);
+
+    return useDatabase(*database);
+}
+
+
+/**
+ * Create [Database|Table] Statement
+ * @param parser
+ */
+int stmtCreate(Parser *parser, Database **database) {
+    if (!accept(parser, T_KW_CREATE)) {
+        return -1;
+    }
+
+    if (accept(parser, T_KW_DATABASE)) {
+        return stmtCreateDatabase(parser, database);
+    } else if (accept(parser, T_KW_TABLE)) {
+        return stmtCreateTable(parser, database);
+    }
+
+    parser->hasError = 1;
+    sprintf(parser->error, "Missing keyword after CREATE (DATABASE|TABLE)");
+    return 1;
+}
+
+/**
  * Create Database Statement ("CREATE DATABASE databaseName;")
  * @param parser
  */
@@ -19,18 +68,14 @@ int stmtCreateDatabase(Parser *parser, Database **database) {
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "database name is missing after CREATE DATABASE\n");
+        sprintf(parser->error, "database name is missing after CREATE DATABASE");
         return 1;
     }
 
-    databaseName = parser->lexer->value;
+    databaseName = strdup(parser->lexer->value);
     accept(parser, T_LIT_IDENTIFIER);
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting after %s\n", databaseName);
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
     *database = initDatabase(databaseName);
     return createDatabase(*database);
@@ -45,10 +90,11 @@ int stmtCreateTable(Parser *parser, Database **database) {
     FieldType fieldType;
     Field *field;
     Table *table;
+    int createTableResult;
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after CREATE TABLE\n");
+        sprintf(parser->error, "table name is missing after CREATE TABLE");
         return 1;
     }
 
@@ -59,14 +105,14 @@ int stmtCreateTable(Parser *parser, Database **database) {
 
     if (!accept(parser, T_OP_LPAREN)) {
         parser->hasError = 1;
-        sprintf(parser->error, "left parenthesis missing after %s\n", table->name);
+        sprintf(parser->error, "left parenthesis missing after %s", table->name);
         return 1;
     }
 
     do {
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "field name is missing\n");
+            sprintf(parser->error, "field name is missing");
             return 1;
         }
 
@@ -75,7 +121,7 @@ int stmtCreateTable(Parser *parser, Database **database) {
 
         if (!is(parser, T_KW_INT) && !is(parser, T_KW_FLOAT) && !is(parser, T_KW_VARCHAR) && !is(parser, T_KW_CHAR)) {
             parser->hasError = 1;
-            sprintf(parser->error, "field type is missing (INT|FLOAT|VARCHAR)\n");
+            sprintf(parser->error, "field type is missing (INT|FLOAT|CHAR|VARCHAR)");
             return 1;
         }
 
@@ -109,38 +155,17 @@ int stmtCreateTable(Parser *parser, Database **database) {
 
     if (!accept(parser, T_OP_RPAREN)) {
         parser->hasError = 1;
-        sprintf(parser->error, "right parenthesis missing\n");
+        sprintf(parser->error, "right parenthesis missing");
         return 1;
     }
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting )\n");
-        return 1;
+    accept(parser, T_OP_SEMICOLON);
+
+    createTableResult = createTable(*database, table);
+    if (createTableResult == 0) {
+        initTables(*database);
     }
-
-    return createTable(*database, table);
-}
-
-
-/**
- * Create [Database|Table] Statement
- * @param parser
- */
-int stmtCreate(Parser *parser, Database **database) {
-    if (!accept(parser, T_KW_CREATE)) {
-        return -1;
-    }
-
-    if (accept(parser, T_KW_DATABASE)) {
-        return stmtCreateDatabase(parser, database);
-    } else if (accept(parser, T_KW_TABLE)) {
-        return stmtCreateTable(parser, database);
-    }
-
-    parser->hasError = 1;
-    sprintf(parser->error, "Missing keyword after CREATE (DATABASE|TABLE)");
-    return 1;
+    return createTableResult;
 }
 
 
@@ -165,37 +190,6 @@ int stmtDrop(Parser *parser, Database **database) {
 }
 
 /**
- * Use Database Statement ("USE databaseName;")
- * @param parser
- */
-int stmtUseDatabase(Parser *parser, Database **database) {
-    char *databaseName;
-
-    if (!accept(parser, T_KW_USE)) {
-        return -1;
-    }
-
-    if (!is(parser, T_LIT_IDENTIFIER)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "database name is missing after USE keyword\n");
-        return 1;
-    }
-
-    databaseName = parser->lexer->value;
-    accept(parser, T_LIT_IDENTIFIER);
-
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting after %s\n", databaseName);
-        return 1;
-    }
-
-    if (*database == NULL)
-        *database = initDatabase(databaseName);
-    return useDatabase(*database);
-}
-
-/**
  * DROP DATABASE Statement ("DROP DATABASE databaseName;")
  * @param parser
  */
@@ -204,20 +198,17 @@ int stmtDropDatabase(Parser *parser, Database **database) {
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "database name is missing after DROP DATABASE\n");
+        sprintf(parser->error, "database name is missing after DROP DATABASE");
         return 1;
     }
 
     databaseName = strdup(parser->lexer->value);
     accept(parser, T_LIT_IDENTIFIER);
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting after %s\n", databaseName);
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
-    *database = initDatabase(databaseName);
+    if (*database == NULL || strcmp((*database)->name, databaseName) != 0)
+        *database = initDatabase(databaseName);
     return dropDatabase(*database);
 }
 
@@ -230,7 +221,7 @@ int stmtDropTable(Parser *parser, Database **database) {
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after DROP TABLE\n");
+        sprintf(parser->error, "table name is missing after DROP TABLE");
         return 1;
     }
 
@@ -238,11 +229,7 @@ int stmtDropTable(Parser *parser, Database **database) {
     table->name = strdup(parser->lexer->value);
     accept(parser, T_LIT_IDENTIFIER);
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting after %s\n", table->name);
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
     return dropTable(*database, table);
 }
@@ -262,13 +249,13 @@ int stmtInsert(Parser *parser, Database **database) {
 
     if (!accept(parser, T_KW_INTO)) {
         parser->hasError = 1;
-        sprintf(parser->error, "INTO keyword is missing after INSERT\n");
+        sprintf(parser->error, "INTO keyword is missing after INSERT");
         return 1;
     }
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after INSERT INTO\n");
+        sprintf(parser->error, "table name is missing after INSERT INTO");
         return 1;
     }
 
@@ -277,8 +264,6 @@ int stmtInsert(Parser *parser, Database **database) {
     table = findTable(*database, tableName);
 
     if (!table) {
-        parser->hasError = 1;
-        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
         return 1;
     }
 
@@ -286,14 +271,14 @@ int stmtInsert(Parser *parser, Database **database) {
 
     if (!accept(parser, T_KW_VALUES)) {
         parser->hasError = 1;
-        sprintf(parser->error, "VALUES keyword expected\n");
+        sprintf(parser->error, "VALUES keyword expected");
         return 1;
     }
 
     // Values
     if (!accept(parser, T_OP_LPAREN)) {
         parser->hasError = 1;
-        sprintf(parser->error, "left parenthesis missing after VALUES\n");
+        sprintf(parser->error, "left parenthesis missing after VALUES");
         return 1;
     }
 
@@ -301,13 +286,13 @@ int stmtInsert(Parser *parser, Database **database) {
         if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
             !is(parser, T_LIT_INT)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)");
             return 1;
         }
 
         if (fieldHead == NULL) {
             parser->hasError = 1;
-            sprintf(parser->error, "More data than expected\n");
+            sprintf(parser->error, "More data than expected");
             return 1;
         }
 
@@ -325,7 +310,7 @@ int stmtInsert(Parser *parser, Database **database) {
                 (data->field->type == VARCHAR &&
                  (parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE && parser->lexer->tok != T_LIT_STR_DOUBLE_QUOTE))) {
                 parser->hasError = 1;
-                sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)\n", data->value,
+                sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)", data->value,
                         fieldHead->name);
                 return 1;
             }
@@ -338,21 +323,17 @@ int stmtInsert(Parser *parser, Database **database) {
 
     if (fieldHead != NULL) {
         parser->hasError = 1;
-        sprintf(parser->error, "Value for field %s is missing\n", fieldHead->name);
+        sprintf(parser->error, "Value for field %s is missing", fieldHead->name);
         return 1;
     }
 
     if (!accept(parser, T_OP_RPAREN)) {
         parser->hasError = 1;
-        sprintf(parser->error, "right parenthesis missing\n");
+        sprintf(parser->error, "right parenthesis missing");
         return 1;
     }
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting after %s\n", tableName);
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
     return addData(*database, table, dataHead);
 }
@@ -371,7 +352,7 @@ int stmtUpdate(Parser *parser, Database **database) {
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after UPDATE\n");
+        sprintf(parser->error, "table name is missing after UPDATE");
         return 1;
     }
 
@@ -380,8 +361,6 @@ int stmtUpdate(Parser *parser, Database **database) {
     table = findTable(*database, tableName);
 
     if (!table) {
-        parser->hasError = 1;
-        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
         return 1;
     }
 
@@ -393,7 +372,7 @@ int stmtUpdate(Parser *parser, Database **database) {
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "colum name is missing\n");
+        sprintf(parser->error, "colum name is missing");
         return 1;
     }
 
@@ -403,21 +382,21 @@ int stmtUpdate(Parser *parser, Database **database) {
     data->field = findField(table, parser->lexer->value);
     if (data->field == NULL) {
         parser->hasError = 1;
-        sprintf(parser->error, "field name %s doesn't exist\n", parser->lexer->value);
+        sprintf(parser->error, "field name %s doesn't exist", parser->lexer->value);
         return 1;
     }
     accept(parser, parser->lexer->tok);
 
     if (!accept(parser, T_OP_EQUAL)) {
         parser->hasError = 1;
-        sprintf(parser->error, "'=' is expected after %s\n", data->field->name);
+        sprintf(parser->error, "'=' is expected after %s", data->field->name);
         return 1;
     }
 
     if (!is(parser, T_LIT_INT) && !is(parser, T_LIT_FLOAT) && !is(parser, T_LIT_STR_DOUBLE_QUOTE) &&
         !is(parser, T_LIT_STR_SIMPLE_QUOTE)) {
         parser->hasError = 1;
-        sprintf(parser->error, "value is missing after '='\n");
+        sprintf(parser->error, "value is missing after '='");
         return 1;
     }
 
@@ -428,7 +407,7 @@ int stmtUpdate(Parser *parser, Database **database) {
         (data->field->type == VARCHAR &&
          (parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE && parser->lexer->tok != T_LIT_STR_DOUBLE_QUOTE))) {
         parser->hasError = 1;
-        sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)\n", parser->lexer->value,
+        sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)", parser->lexer->value,
                 data->field->name);
         return 1;
     }
@@ -439,7 +418,7 @@ int stmtUpdate(Parser *parser, Database **database) {
     if (accept(parser, T_KW_WHERE)) {
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "column name is missing\n");
+            sprintf(parser->error, "column name is missing");
             return 1;
         }
 
@@ -451,14 +430,14 @@ int stmtUpdate(Parser *parser, Database **database) {
 
         if (!accept(parser, T_OP_EQUAL)) {
             parser->hasError = 1;
-            sprintf(parser->error, "'=' is missing after %s\n", condition->key);
+            sprintf(parser->error, "'=' is missing after %s", condition->key);
             return 1;
         }
 
         if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
             !is(parser, T_LIT_INT)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)");
             return 1;
         }
 
@@ -466,11 +445,7 @@ int stmtUpdate(Parser *parser, Database **database) {
         accept(parser, parser->lexer->tok);
     }
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting\n");
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
     return openFilesForUpdating(*database, table, data, condition);
 }
@@ -479,6 +454,7 @@ int stmtDelete(Parser *parser, Database **database) {
     char *tableName;
     Table *table;
     Condition *condition;
+    Field *field;
 
     condition = NULL;
     if (!accept(parser, T_KW_DELETE)) {
@@ -487,13 +463,13 @@ int stmtDelete(Parser *parser, Database **database) {
 
     if (!accept(parser, T_KW_FROM)) {
         parser->hasError = 1;
-        sprintf(parser->error, "FROM keyword is missing after DELETE\n");
+        sprintf(parser->error, "FROM keyword is missing after DELETE");
         return 1;
     }
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after DROP FROM\n");
+        sprintf(parser->error, "table name is missing after DROP FROM");
         return 1;
     }
 
@@ -502,15 +478,13 @@ int stmtDelete(Parser *parser, Database **database) {
     table = findTable(*database, tableName);
 
     if (!table) {
-        parser->hasError = 1;
-        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
         return 1;
     }
 
     if (accept(parser, T_KW_WHERE)) {
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "column name is missing\n");
+            sprintf(parser->error, "column name is missing");
             return 1;
         }
 
@@ -518,31 +492,46 @@ int stmtDelete(Parser *parser, Database **database) {
         if (!condition)
             return 1;
         condition->key = strdup(parser->lexer->value);
+        field = findField(table, parser->lexer->value);
+        if (field == NULL) {
+            parser->hasError = 1;
+            sprintf(parser->error, "field name %s doesn't exist", parser->lexer->value);
+            return 1;
+        }
         accept(parser, T_LIT_IDENTIFIER);
 
         if (!accept(parser, T_OP_EQUAL)) {
             parser->hasError = 1;
-            // TODO: set column name here
-            sprintf(parser->error, "'=' is missing after %s\n", "COLUMN NAME");
+            sprintf(parser->error, "'=' is missing after %s", condition->key);
             return 1;
         }
+        accept(parser, T_OP_EQUAL);
 
         if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
             !is(parser, T_LIT_INT)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)");
             return 1;
         }
 
         condition->value = strdup(parser->lexer->value);
+
+        if ((field->type == INT && parser->lexer->tok != T_LIT_INT) ||
+            (field->type == FLOAT && parser->lexer->tok != T_LIT_FLOAT) ||
+            (field->type == CHAR && parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE) ||
+            (field->type == CHAR && strlen(condition->value) > 1) ||
+            (field->type == VARCHAR &&
+             (parser->lexer->tok != T_LIT_STR_SIMPLE_QUOTE && parser->lexer->tok != T_LIT_STR_DOUBLE_QUOTE))) {
+            parser->hasError = 1;
+            sprintf(parser->error, "Value %s for field %s is incorrect (wrong data type)", parser->lexer->value,
+                    field->name);
+            return 1;
+        }
+
         accept(parser, parser->lexer->tok);
     }
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting\n");
-        return 1;
-    }
+    accept(parser, T_OP_SEMICOLON);
 
     return openFilesForRemoving(*database, table, condition);
 }
@@ -556,6 +545,10 @@ int stmtSelect(Parser *parser, Database **database) {
     Field *fieldHeadCopy;
     Field *field;
     int asteriskMode;
+
+    // iliasse
+    (*database)->selectedData = NULL;
+    // fin iliasse
 
     condition = NULL;
     asteriskMode = 0;
@@ -571,7 +564,7 @@ int stmtSelect(Parser *parser, Database **database) {
         do {
             if (!is(parser, T_LIT_IDENTIFIER)) {
                 parser->hasError = 1;
-                sprintf(parser->error, "field name is missing\n");
+                sprintf(parser->error, "field name is missing");
                 return 1;
             }
 
@@ -590,13 +583,13 @@ int stmtSelect(Parser *parser, Database **database) {
 
     if (!accept(parser, T_KW_FROM)) {
         parser->hasError = 1;
-        sprintf(parser->error, "FROM keyword is missing\n");
+        sprintf(parser->error, "FROM keyword is missing");
         return 1;
     }
 
     if (!is(parser, T_LIT_IDENTIFIER)) {
         parser->hasError = 1;
-        sprintf(parser->error, "table name is missing after DROP FROM\n");
+        sprintf(parser->error, "table name is missing after FROM");
         return 1;
     }
 
@@ -605,16 +598,18 @@ int stmtSelect(Parser *parser, Database **database) {
     table = findTable(*database, tableName);
 
     if (!table) {
-        parser->hasError = 1;
-        sprintf(parser->error, "Table %s doesn't exist\n", tableName);
         return 1;
+    }
+
+    if (asteriskMode) {
+        fieldHead = table->fieldHead;
     }
 
     fieldHeadCopy = fieldHead;
     while (fieldHeadCopy != NULL) {
         if (findField(table, fieldHeadCopy->name) == NULL) {
             parser->hasError = 1;
-            sprintf(parser->error, "field name %s doesn't exist\n", fieldHead->name);
+            sprintf(parser->error, "field name %s doesn't exist", fieldHead->name);
             return 1;
         }
         fieldHeadCopy = fieldHeadCopy->next;
@@ -628,19 +623,19 @@ int stmtSelect(Parser *parser, Database **database) {
 
         if (!asteriskMode) {
             parser->hasError = 1;
-            sprintf(parser->error, "Only '*' is allowed for sql joins\n");
+            sprintf(parser->error, "Only '*' is allowed for sql joins");
             return 1;
         }
 
         if (!accept(parser, T_KW_JOIN)) {
             parser->hasError = 1;
-            sprintf(parser->error, "JOIN keyword is missing\n");
+            sprintf(parser->error, "JOIN keyword is missing");
             return 1;
         }
 
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "table name for sql joins is missing\n");
+            sprintf(parser->error, "table name for sql joins is missing");
             return 1;
         }
 
@@ -650,20 +645,20 @@ int stmtSelect(Parser *parser, Database **database) {
 
         if (joinTable == table || joinTable == NULL) {
             parser->hasError = 1;
-            sprintf(parser->error, "Table %s for sql joins doesn't exist or is the same as the original table\n",
+            sprintf(parser->error, "Table %s for sql joins doesn't exist or is the same as the original table",
                     string);
             return 1;
         }
 
         if (!accept(parser, T_KW_ON)) {
             parser->hasError = 1;
-            sprintf(parser->error, "ON keyword is missing after %s\n", string);
+            sprintf(parser->error, "ON keyword is missing after %s", string);
             return 1;
         }
 
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Table is missing after ON keyword (table.id)\n");
+            sprintf(parser->error, "Table is missing after ON keyword (table.id)");
             return 1;
         }
 
@@ -672,7 +667,7 @@ int stmtSelect(Parser *parser, Database **database) {
 
         if (findTable(*database, string) != table) {
             parser->hasError = 1;
-            sprintf(parser->error, "Table %s for sql joins must be %s\n",
+            sprintf(parser->error, "Table %s for sql joins must be %s",
                     string, tableName);
             return 1;
         }
@@ -680,13 +675,13 @@ int stmtSelect(Parser *parser, Database **database) {
         if (!accept(parser, T_OP_DOT)) {
             printf("%s\n", tokenTypeAsString(parser->lexer->tok));
             parser->hasError = 1;
-            sprintf(parser->error, "expected '.' after %s\n", string);
+            sprintf(parser->error, "expected '.' after %s", string);
             return 1;
         }
 
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "field name is missing after %s.\n", string);
+            sprintf(parser->error, "field name is missing after %s.", string);
             return 1;
         }
 
@@ -696,19 +691,19 @@ int stmtSelect(Parser *parser, Database **database) {
         field1 = findField(table, string);
         if (!field1) {
             parser->hasError = 1;
-            sprintf(parser->error, "field %s doesn't exist in table %s.\n", string, table->name);
+            sprintf(parser->error, "field %s doesn't exist in table %s.", string, table->name);
             return 1;
         }
 
         if (!accept(parser, T_OP_EQUAL)) {
             parser->hasError = 1;
-            sprintf(parser->error, "'=' expected after %s.\n", string);
+            sprintf(parser->error, "'=' expected after %s.", string);
             return 1;
         }
 
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Table is missing after '=' (table.id)\n");
+            sprintf(parser->error, "Table is missing after '=' (table.id)");
             return 1;
         }
 
@@ -717,7 +712,7 @@ int stmtSelect(Parser *parser, Database **database) {
 
         if (findTable(*database, string) != joinTable) {
             parser->hasError = 1;
-            sprintf(parser->error, "Table %s for sql joins must be %s\n",
+            sprintf(parser->error, "Table %s for sql joins must be %s",
                     string, joinTable->name);
             return 1;
         }
@@ -725,13 +720,13 @@ int stmtSelect(Parser *parser, Database **database) {
         if (!accept(parser, T_OP_DOT)) {
             printf("%s\n", tokenTypeAsString(parser->lexer->tok));
             parser->hasError = 1;
-            sprintf(parser->error, "expected '.' after %s\n", string);
+            sprintf(parser->error, "expected '.' after %s", string);
             return 1;
         }
 
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "field name is missing after %s.\n", string);
+            sprintf(parser->error, "field name is missing after %s.", string);
             return 1;
         }
 
@@ -741,7 +736,7 @@ int stmtSelect(Parser *parser, Database **database) {
         field2 = findField(joinTable, string);
         if (!field2) {
             parser->hasError = 1;
-            sprintf(parser->error, "field %s doesn't exist in table %s.\n", string, joinTable->name);
+            sprintf(parser->error, "field %s doesn't exist in table %s.", string, joinTable->name);
             return 1;
         }
 
@@ -751,7 +746,7 @@ int stmtSelect(Parser *parser, Database **database) {
     if (accept(parser, T_KW_WHERE)) {
         if (!is(parser, T_LIT_IDENTIFIER)) {
             parser->hasError = 1;
-            sprintf(parser->error, "column name is missing\n");
+            sprintf(parser->error, "column name is missing");
             return 1;
         }
 
@@ -763,14 +758,14 @@ int stmtSelect(Parser *parser, Database **database) {
 
         if (!accept(parser, T_OP_EQUAL)) {
             parser->hasError = 1;
-            sprintf(parser->error, "'=' is missing after %s\n", condition->key);
+            sprintf(parser->error, "'=' is missing after %s", condition->key);
             return 1;
         }
 
         if (!is(parser, T_LIT_STR_DOUBLE_QUOTE) && !is(parser, T_LIT_STR_SIMPLE_QUOTE) && !is(parser, T_LIT_FLOAT) &&
             !is(parser, T_LIT_INT)) {
             parser->hasError = 1;
-            sprintf(parser->error, "Value is missing (STRING|FLOAT|INT)\n");
+            sprintf(parser->error, "Value is missing (STRING|CHAR|FLOAT|INT)");
             return 1;
         }
 
@@ -778,11 +773,6 @@ int stmtSelect(Parser *parser, Database **database) {
         accept(parser, parser->lexer->tok);
     }
 
-    if (!accept(parser, T_OP_SEMICOLON)) {
-        parser->hasError = 1;
-        sprintf(parser->error, "';' expecting\n");
-        return 1;
-    }
-
+    accept(parser, T_OP_SEMICOLON);
     return selectData(*database, table, fieldHead, condition);
 }

@@ -36,6 +36,7 @@ typedef struct SDatabase {
     char *name;
     int isUsed;
     struct STable *tableHead;
+    struct SSelectedData *selectedData;
 } Database;
 
 Database *initDatabase(const char *databaseName);
@@ -86,23 +87,30 @@ long isConditionFulfilled(FILE *file, Condition *condition);
 
 int openFilesForUpdating(Database *database, Table *table, Data *data, Condition *condition);
 
+char *getUserInput();
+
+void selectedDataListAppend(SelectedData **node, SelectedData *newNode);
+
 int selectData(Database *database, Table *table, Field *field, Condition *condition);
 
-void selectMethod(FILE *file, Field *field, Condition *condition);
+void selectMethod(FILE *file, Field *field, Condition *condition, Database *database);
 
-long displayAllData(FILE *file);
+long displayAllData(FILE *file, Database *database);
 
-int displayAllDataWithoutCondition(FILE *file);
+int displayAllDataWithoutCondition(FILE *file, Database *database);
 
-long BrowseSingleData(FILE *file, Field *field);
+long BrowseSingleData(FILE *file, Field *field, Database *database);
 
-long displaySingleData(FILE *file, Field *currentField);
+void displaySingleData(FILE *file, Field *currentField, Database *database, Condition *condition);
 
 int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char *key, char *key2, void *field,
                           void *condition);
 
-void selectFuncInnerJoin(FILE *file, FILE *file2, char *key, char *key2, Field *field, Condition *condition);
+void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key, char *key2, Field *field,
+                         Condition *condition);
 
 int innerJoin(Table *table1, Table *table2, char *key, char *key2, Field *field, Condition *condition);
+
+char* error;
 
 #endif //YAMLDB_DATABASE_H

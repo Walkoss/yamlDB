@@ -7,13 +7,14 @@
 */
 
 #include "xmalloc.h"
+#include "../database/database.h"
 
 void *xmalloc(size_t size, const char *functionName) {
     void *ptr;
 
     ptr = malloc(size);
     if (!ptr) {
-        fprintf(stderr, "Malloc failed for %s function\n", functionName);
+        sprintf(error, "Malloc failed for %s function\n", functionName);
     }
     return ptr;
 }

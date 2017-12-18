@@ -7,6 +7,7 @@
 */
 
 #include "../database/database.h"
+#include "../print_color/print_color.h"
 
 /**
  * Initialize the fields in Table structure
@@ -32,12 +33,15 @@ int initFieldsInStruct(FILE *file, Table *table, Field *field) {
         if (strcmp(name, "data") == 0) {
             break;
         } else if (strcmp(name, "") != 0) {
-            field->name = name;
+            field->name = xmalloc(sizeof(char*), __func__);
+            strcpy(field->name, name);
             field->type = type;
             field->next = table->fieldHead;
             table->fieldHead = field;
         }
     }
+
+    fieldListReverse(&table->fieldHead);
 
     return 0;
 }
@@ -60,8 +64,8 @@ int initFields(Database *database, Table *table) {
         initFieldsInStruct(file, table, field);
         fclose(file);
     } else {
-        fprintf(stderr, "An error has occured when init fields '%s': "
-                "%s\n", table->name, strerror(errno));
+        sprintf(error, "%sAn error has occured when init fields '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         return 1;
     }
 
@@ -89,9 +93,10 @@ int addFieldsInFile(Database *database, Table *table) {
 
     file = fopen(path, "w+");
     if (!file) {
-        fprintf(stderr, "An error has occured when creating table '%s': "
+        sprintf(error, "An error has occured when creating table '%s': "
                 "%s\n", table->name, strerror(errno));
         free(path);
+        fclose(file);
         return 1;
     }
 
@@ -104,6 +109,7 @@ int addFieldsInFile(Database *database, Table *table) {
     }
 
     fprintf(file, "data:\n");
+    fclose(file);
     initFields(database, table);
 
     return 0;
@@ -123,16 +129,14 @@ int freeFields(Table *table) {
 
     currentField = table->fieldHead;
 
-    while (currentField->next != NULL) {
-        fieldToFree = currentField->next;
-        table->fieldHead = currentField;
+    while (currentField != NULL) {
+        fieldToFree = currentField;
         currentField = currentField->next;
         free(fieldToFree);
     }
 
     table->fieldHead = NULL;
     free(currentField);
-
     return 0;
 }
 
@@ -147,6 +151,23 @@ void fieldListAppend(Field **node, Field *newNode) {
         fieldListLast(*node)->next = newNode;
     else
         *node = newNode;
+}
+
+
+void fieldListReverse(Field **begin) {
+    Field *prev_node;
+    Field *curr_node;
+    Field *next_node;
+
+    prev_node = NULL;
+    curr_node = *begin;
+    while (curr_node != NULL) {
+        next_node = curr_node->next;
+        curr_node->next = prev_node;
+        prev_node = curr_node;
+        curr_node = next_node;
+    }
+    *begin = prev_node;
 }
 
 Field *findField(Table *table, const char *fieldName) {
