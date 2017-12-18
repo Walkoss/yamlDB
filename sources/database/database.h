@@ -111,4 +111,6 @@ void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key,
 
 int innerJoin(Table *table1, Table *table2, char *key, char *key2, Field *field, Condition *condition);
 
+char* error;
+
 #endif //YAMLDB_DATABASE_H

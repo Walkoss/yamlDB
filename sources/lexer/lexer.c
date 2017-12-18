@@ -8,6 +8,7 @@
 
 #include "lexer.h"
 #include "../print_color/print_color.h"
+#include "../database/database.h"
 
 void lexerMakeTokenLiteral(Lexer *lexer, char *keyword, TokenType type) {
     TokenHash *tokenHash;
@@ -125,7 +126,7 @@ int lexerIsEos(Lexer *lexer) {
 }
 
 void lexerDisplayError(Lexer *lexer) {
-    fprintf(stderr, "%sSyntaxError: %s at line %zd and position %zd%s",
+    sprintf(error, "%sSyntaxError: %s at line %zd and position %zd%s",
             COLOR_RED, lexer->error, lexer->lineNb, lexer->curPos, COLOR_RESET);
 }
 

@@ -70,13 +70,19 @@ void runSqlRequestCallback(GtkWidget *pButton, gpointer data)
 void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *request)
 {
     Parser *parser;
-    //Database *database;
     int column = 0;
     GType *columnsType;
     GtkCellRenderer *cellDataRenderer;
     GtkTreeViewColumn *columnDataList;
     char *sql;
 
+    if (gtkDatabase->database == NULL)
+    {
+        instanceMessageDialog(gtkDatabase->pTableDataBox, "Aucune base de données n'est choisie.");
+        return;
+    }
+
+    gtkDatabase->database->selectedData = NULL;
     // Création de la requete sql si on affiche toutes les données d'une seule table
     if (request == NULL)
     {
@@ -85,36 +91,27 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         strcat(sql, table->name);
         strcat(sql, ";");
         parser = parserInit(sql);
-        char buf[BUFSIZ];
-        setbuf(stderr, buf);
-        if (parse(parser, &gtkDatabase->database))
-        {
-            instanceMessageDialog(gtkDatabase->pTableDataBox, buf);
-            updateInformationLabel(gtkDatabase, isSuccessGtk(1));
-        }
-        else
-            updateInformationLabel(gtkDatabase, isSuccessGtk(0));
+        parse(parser, &gtkDatabase->database);
         parserFree(parser);
         free(sql);
     }
     else
     {
         parser = parserInit(request);
-        char buf[BUFSIZ];
-        setbuf(stderr, buf);
         if (parse(parser, &gtkDatabase->database))
         {
-            instanceMessageDialog(gtkDatabase->pTableDataBox, buf);
+            instanceMessageDialog(gtkDatabase->pTableDataBox, error);
             updateInformationLabel(gtkDatabase, isSuccessGtk(1));
         }
-        else
+        else {
             updateInformationLabel(gtkDatabase, isSuccessGtk(0));
+        }
         parserFree(parser);
     }
 
     if (gtkDatabase->database && gtkDatabase->database->selectedData)
     {
-        // On récupère la première liste de valeur pour obtenir la key/valuedans le bon ordre
+        // On récupère la première liste de valeur pour obtenir la key/value dans le bon ordre
         SelectedData *selectedDataTmp = gtkDatabase->database->selectedData;
         while (selectedDataTmp != NULL && selectedDataTmp->key) {
             if (selectedDataTmp->key)
@@ -166,48 +163,12 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
             selectedDataTmp = selectedDataTmp->next;
         }
 
-        /*Field *fieldTmp = table->fieldHead;
-        for(int i = 0; fieldTmp != NULL; i++)
-        {
-            cellDataRenderer = gtk_cell_renderer_text_new();
-            columnDataList = gtk_tree_view_column_new_with_attributes(fieldTmp->name, cellDataRenderer, "text", i, NULL);
-            gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
-            fieldTmp = fieldTmp->next;
-        }*/
-
         gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
         gtk_widget_show(gtkDatabase->pTableDataListView);
         gtkDatabase->tableDataExist = TRUE;
     }
     else
-    {/*
-        if (gtkDatabase->tableDataExist) {
-            gtk_widget_destroy(gtkDatabase->pTableDataListView);
-            gtkDatabase->tableDataExist = FALSE;
-        }
-        Field *fieldTmp = table->fieldHead;
-        while (fieldTmp != NULL)
-        {
-            column++;
-            fieldTmp = fieldTmp->next;
-        }
-        columnsType = g_new0(GType, column);
-        for (int i = 0; i < column; i++)
-            columnsType[i] = G_TYPE_STRING;
-        gtkDatabase->pTableDataList = gtk_list_store_newv(column, columnsType);
-        gtkDatabase->pTableDataListView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gtkDatabase->pTableDataList));
-        fieldTmp = table->fieldHead;
-        for (int i = 0; fieldTmp != NULL; i++)
-        {
-            cellDataRenderer = gtk_cell_renderer_text_new();
-            columnDataList = gtk_tree_view_column_new_with_attributes(fieldTmp->name, cellDataRenderer, "text", i, NULL);
-            gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
-            fieldTmp = fieldTmp->next;
-        }
-        gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
-        gtk_widget_show(gtkDatabase->pTableDataListView);
-        gtkDatabase->tableDataExist = TRUE;*/
-    }
+        initDatabaseCallback(NULL, gtkDatabase);
 }
 
 void initTableComboBox(GtkDatabase *gtkDatabase)
@@ -227,7 +188,7 @@ void initTableComboBox(GtkDatabase *gtkDatabase)
     }
     else {
         tableTmp = gtkDatabase->database->tableHead;
-        gtk_widget_set_sensitive(gtkDatabase->pObject[8], TRUE);                                             // Désactive la comboBox
+        gtk_widget_set_sensitive(gtkDatabase->pObject[8], TRUE);                                             // Activation de la comboBox
         gtk_widget_set_sensitive(gtkDatabase->pObject[10], TRUE);
         while (tableTmp != NULL) {
             GtkTreeIter iterTable;
@@ -451,8 +412,6 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
     tableShowingInformationsHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     radioHbox1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 
-    //g_signal_connect_swapped (dialog, "response", G_CALLBACK (gtk_widget_destroy), dialog);
-
     gtk_window_set_default_size(&(GTK_DIALOG(dialog)->window), 500, 350);
 
     // Ajout liste de gauche affichant les champs de la table à créer
@@ -567,6 +526,7 @@ void createDatabaseCallback(GtkWidget *pButton, gpointer data)
     GtkWidget *pTempEntry;
     GList *pEntryList;
     GList *pList;
+    int result = 1;
     const gchar *sText;
 
     pList = gtk_container_get_children(GTK_CONTAINER(gtk_widget_get_parent(gtk_widget_get_parent(pButton))));
@@ -578,13 +538,15 @@ void createDatabaseCallback(GtkWidget *pButton, gpointer data)
     if (strlen(sText) > 0)
     {
         gtkDatabase->database = initDatabase(sText);
-        if (!createDatabase(gtkDatabase->database)) {
+        result = createDatabase(gtkDatabase->database);
+        if (!result) {
             useDatabase(gtkDatabase->database);
             gtk_label_set_text(GTK_LABEL(gtkDatabase->pObject[6]), gtkDatabase->database->name);
             initTableComboBox(gtkDatabase);
             gtk_widget_set_sensitive(gtkDatabase->pObject[9], TRUE);
             gtk_widget_set_sensitive(gtkDatabase->pObject[4], TRUE);
         }
+        updateInformationLabel(gtkDatabase, isSuccessGtk(result));
     }
     g_list_free(pList);
 }
@@ -592,16 +554,19 @@ void createDatabaseCallback(GtkWidget *pButton, gpointer data)
 void removeDatabaseCallback(GtkWidget *pButton, gpointer data)
 {
     GtkDatabase *gtkDatabase = (GtkDatabase*)data;
+    int result;
 
     if (gtkDatabase->database != NULL)
     {
-        if (!dropDatabase(gtkDatabase->database)) {
+        result = dropDatabase(gtkDatabase->database);
+        if (!result) {
             gtkDatabase->database = NULL;
             gtk_widget_set_sensitive(gtkDatabase->pObject[4], FALSE);
             gtk_widget_set_sensitive(gtkDatabase->pObject[8], FALSE);
             gtk_label_set_text(GTK_LABEL(gtkDatabase->pObject[6]), "Aucune bdd sélectionnée");
             initDefaultValues(gtkDatabase);
         }
+        updateInformationLabel(gtkDatabase, isSuccessGtk(result));
     }
 }
 
@@ -762,12 +727,11 @@ void run(int argc, char **argv)
 {
     GtkDatabase *gtkDatabase = xmalloc(sizeof(GtkDatabase), __func__);
     gtkDatabase->database = NULL;
-    /* Initialisation de GTK+ */
+    error = xmalloc(BUFFER_SIZE, __func__);
     gtk_init(&argc, &argv);
 
-    /* Initialisation de la fenêtre */
     GtkWidget *p_window = initWindow(gtkDatabase);
 
-    /* Lancement de la boucle principale */
     gtk_main ();
+    free(error);
 }

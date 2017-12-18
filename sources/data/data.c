@@ -8,6 +8,7 @@
 
 #include "../database/database.h"
 #include "../print_color/print_color.h"
+#include "../gtk/gtk.h"
 
 /**
  * Add data on file
@@ -30,7 +31,7 @@ int addData(Database *database, Table *table, Data *data) {
 
     file = fopen(path, "a+");
     if (!file) {
-        fprintf(stderr, "An error has occured when adding data in table '%s': "
+        sprintf(error, "An error has occured when adding data in table '%s': "
                 "%s\n", table->name, strerror(errno));
         free(path);
         return 1;
@@ -122,7 +123,7 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
     file = fopen(path, "r+");
     fileTmp = fopen(pathTmp, "w+");
     if (!file || !fileTmp) {
-        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+        sprintf(error, "%sAn error has occured when removing data in table '%s': "
                 "%s%s\n", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         free(pathTmp);
@@ -334,7 +335,7 @@ int openFilesForUpdating(Database *database, Table *table, Data *data, Condition
     file = fopen(path, "r+");
     fileTmp = fopen(pathTmp, "w+");
     if (!file || !fileTmp) {
-        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+        sprintf(error, "%sAn error has occured when removing data in table '%s': "
                 "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         free(pathTmp);

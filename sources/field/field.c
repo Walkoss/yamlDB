@@ -64,7 +64,7 @@ int initFields(Database *database, Table *table) {
         initFieldsInStruct(file, table, field);
         fclose(file);
     } else {
-        fprintf(stderr, "%sAn error has occured when init fields '%s': "
+        sprintf(error, "%sAn error has occured when init fields '%s': "
                 "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         return 1;
     }
@@ -93,7 +93,7 @@ int addFieldsInFile(Database *database, Table *table) {
 
     file = fopen(path, "w+");
     if (!file) {
-        fprintf(stderr, "An error has occured when creating table '%s': "
+        sprintf(error, "An error has occured when creating table '%s': "
                 "%s\n", table->name, strerror(errno));
         free(path);
         fclose(file);

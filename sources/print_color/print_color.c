@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "print_color.h"
+#include "../database/database.h"
 
 void print_color(char *color, char *message) {
     printf("%s", color);
@@ -8,9 +9,9 @@ void print_color(char *color, char *message) {
 }
 
 void print_error_color(char *message) {
-    fprintf(stderr, "%s", COLOR_RED);
-    fprintf(stderr, "%s", message);
-    fprintf(stderr, "%s", COLOR_RESET);
+    sprintf(error, "%s", COLOR_RED);
+    sprintf(error, "%s", message);
+    sprintf(error, "%s", COLOR_RESET);
 }
 
 char *retrieveErrorMessage() {

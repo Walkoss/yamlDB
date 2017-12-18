@@ -22,7 +22,7 @@ int initTables(Database *database) {
 
     dir = opendir(getDatabasePath(database->name));
     if (!dir) {
-        fprintf(stderr, "%sAn error has occured when opening database '%s': "
+        sprintf(error, "%sAn error has occured when opening database '%s': "
                 "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         return 1;
     }
@@ -90,7 +90,7 @@ Table *findTable(Database *database, char *tableName) {
     Table *currentTable;
 
     if (!database || !database->isUsed) {
-        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return NULL;
     }
 
@@ -102,7 +102,7 @@ Table *findTable(Database *database, char *tableName) {
         currentTable = currentTable->next;
     }
 
-    fprintf(stderr, "%sTable %s doesn't exist\n%s", COLOR_RED, tableName, COLOR_RESET);
+    sprintf(error, "%sTable %s doesn't exist\n%s", COLOR_RED, tableName, COLOR_RESET);
     return NULL;
 }
 
@@ -149,7 +149,7 @@ int createTable(Database *database, Table *table) {
     char *path;
 
     if (!database || !database->isUsed) {
-        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return 1;
     }
 
@@ -165,7 +165,7 @@ int createTable(Database *database, Table *table) {
         addFieldsInFile(database, table);
         database->tableHead = table;
     } else {
-        fprintf(stderr, "%sThe table '%s' already exist\n%s", COLOR_RED, table->name, COLOR_RESET);
+        sprintf(error, "%sThe table '%s' already exist\n%s", COLOR_RED, table->name, COLOR_RESET);
         free(path);
         return 1;
     }
@@ -185,7 +185,7 @@ int dropTable(Database *database, Table *table) {
     char *path;
 
     if (!database || !database->isUsed) {
-        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
+        sprintf(error, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return 1;
     }
 
@@ -196,7 +196,7 @@ int dropTable(Database *database, Table *table) {
     if (!path)
         return 1;
     if (remove(path) == -1) {
-        fprintf(stderr, "%sAn error has occured when removing table '%s': "
+        sprintf(error, "%sAn error has occured when removing table '%s': "
                 "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
 
         free(path);

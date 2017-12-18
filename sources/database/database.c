@@ -70,7 +70,7 @@ int useDatabase(Database *database) {
             print_error_color("Error : you are already using this database\n");
         }
     } else {
-        fprintf(stderr, "%sAn error has occured when opening database '%s': "
+        sprintf(error, "%sAn error has occured when opening database '%s': "
                 "%s%s\n", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         return 1;
     }
@@ -94,7 +94,7 @@ int createDatabase(Database *database) {
         return 1;
 
     if (mkdir(path, 0777) == -1) {
-        fprintf(stderr, "%sAn error has occured when creating database '%s': "
+        sprintf(error, "%sAn error has occured when creating database '%s': "
                 "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;
@@ -118,7 +118,7 @@ int removeFile(const char *fpath,
                int tflag,
                struct FTW *ftwbuf) {
     if (remove(fpath) == -1) {
-        fprintf(stderr,
+        sprintf(error,
                 "An error has occured when removing directory/file '%s': "
                         "%s\n",
                 fpath,
@@ -145,7 +145,7 @@ int dropDatabase(Database *database) {
         return 1;
 
     if (nftw(path, removeFile, NOPENFD, FTW_DEPTH) == -1) {
-        fprintf(stderr, "%sAn error has occured when removing database '%s': "
+        sprintf(error, "%sAn error has occured when removing database '%s': "
                 "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;

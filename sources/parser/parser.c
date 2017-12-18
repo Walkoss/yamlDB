@@ -44,7 +44,7 @@ void parserFree(Parser *parser) {
 }
 
 void parserDisplayError(Parser *parser) {
-    fprintf(stderr, "%s%s at line %zd and position %zd%s",
+    sprintf(error, "%s%s at line %zd and position %zd%s",
             COLOR_RED, parser->error, parser->lexer->lineNb, parser->lexer->curPos, COLOR_RESET);
 }
 
@@ -71,7 +71,7 @@ int parse(Parser *parser, Database **database) {
             i++;
         }
         if (returnValue == -1) {
-            fprintf(stderr, "%sSyntax Error: command not found%s", COLOR_RED, COLOR_RESET);
+            sprintf(error, "%sSyntax Error: command not found%s", COLOR_RED, COLOR_RESET);
             return 1;
         }
     }

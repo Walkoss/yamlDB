@@ -278,7 +278,7 @@ int selectData(Database *database, Table *table, Field *field, Condition *condit
 
     file = fopen(path, "r+");
     if (!file) {
-        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+        sprintf(error, "%sAn error has occured when removing data in table '%s': "
                 "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;

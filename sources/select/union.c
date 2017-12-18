@@ -27,7 +27,7 @@ int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char
     file = fopen(path, "r+");
     file2 = fopen(path2, "r+");
     if (!file || !file2) {
-        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+        sprintf(error, "%sAn error has occured when removing data in table '%s': "
                 "%s\n%s", COLOR_RED, table1->name, strerror(errno), COLOR_RESET);
         free(path);
         free(path2);
