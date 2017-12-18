@@ -91,6 +91,8 @@ int addFieldsInFile(Database *database, Table *table) {
         fprintf(file, "\t%s: %d\n", field->name, field->type);
         field = field->next;
     }
+    
+    fprintf(file, "data:\n");
 
     fclose(file);
 

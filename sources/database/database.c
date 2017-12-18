@@ -72,6 +72,7 @@ int useDatabase(Database *database) {
     } else {
         fprintf(stderr, "An error has occured when opening database '%s': "
                 "%s\n", database->name, strerror(errno));
+        return 1;
     }
 
     return 0;
