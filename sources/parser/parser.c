@@ -7,10 +7,12 @@
 */
 
 #include "parser.h"
+#include "../lexer/lexer.h"
+#include "../print_color/print_color.h"
 
 const StmtFunction stmtFunctions[] = {
-        {stmtCreate},
         {stmtUseDatabase},
+        {stmtCreate},
         {stmtDrop},
         {stmtInsert},
         {stmtUpdate},
@@ -42,34 +44,38 @@ void parserFree(Parser *parser) {
 }
 
 void parserDisplayError(Parser *parser) {
-    fprintf(stderr, "%s\n", parser->error);
+    fprintf(stderr, "%s%s at line %zd and position %zd%s",
+            COLOR_RED, parser->error, parser->lexer->lineNb, parser->lexer->curPos, COLOR_RESET);
 }
 
-void parse(Parser *parser) {
-    Database *database;
+int parse(Parser *parser, Database **database) {
     int i;
     int returnValue;
-    int stop;
 
-    database = NULL;
-    stop = 0;
     getToken(parser->lexer);
-    while (!lexerIsEos(parser->lexer) && stop == 0) {
+    while (parser->lexer->tok != T_EOS) {
         i = 0;
+        returnValue = -1;
         while (stmtFunctions[i].functionPtr != NULL) {
-            returnValue = stmtFunctions[i].functionPtr(parser, &database);
+            returnValue = stmtFunctions[i].functionPtr(parser, database);
             if (returnValue != 0 && returnValue != -1) {
                 if (parser->lexer->tok == T_ILLEGAL) {
                     lexerDisplayError(parser->lexer);
                 } else if (parser->hasError) {
                     parserDisplayError(parser);
                 }
-                stop = 1;
+                return returnValue;
+            } else if (returnValue == 0) {
                 break;
             }
             i++;
         }
+        if (returnValue == -1) {
+            fprintf(stderr, "%sSyntax Error: command not found%s", COLOR_RED, COLOR_RESET);
+            return 1;
+        }
     }
+    return 0;
 }
 
 int is(Parser *parser, TokenType tokenType) {

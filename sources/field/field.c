@@ -7,6 +7,7 @@
 */
 
 #include "../database/database.h"
+#include "../print_color/print_color.h"
 
 /**
  * Initialize the fields in Table structure
@@ -39,6 +40,8 @@ int initFieldsInStruct(FILE *file, Table *table, Field *field) {
         }
     }
 
+    fieldListReverse(&table->fieldHead);
+
     return 0;
 }
 
@@ -60,8 +63,8 @@ int initFields(Database *database, Table *table) {
         initFieldsInStruct(file, table, field);
         fclose(file);
     } else {
-        fprintf(stderr, "An error has occured when init fields '%s': "
-                "%s\n", table->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when init fields '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         return 1;
     }
 
@@ -104,6 +107,7 @@ int addFieldsInFile(Database *database, Table *table) {
     }
 
     fprintf(file, "data:\n");
+    fclose(file);
     initFields(database, table);
 
     return 0;
@@ -147,6 +151,23 @@ void fieldListAppend(Field **node, Field *newNode) {
         fieldListLast(*node)->next = newNode;
     else
         *node = newNode;
+}
+
+
+void fieldListReverse(Field **begin) {
+    Field *prev_node;
+    Field *curr_node;
+    Field *next_node;
+
+    prev_node = NULL;
+    curr_node = *begin;
+    while (curr_node != NULL) {
+        next_node = curr_node->next;
+        curr_node->next = prev_node;
+        prev_node = curr_node;
+        curr_node = next_node;
+    }
+    *begin = prev_node;
 }
 
 Field *findField(Table *table, const char *fieldName) {

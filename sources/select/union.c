@@ -7,6 +7,7 @@
 */
 
 #include "../database/database.h"
+#include "../print_color/print_color.h"
 
 int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char *key, char *key2, void *field,
                           void *condition) {
@@ -26,8 +27,8 @@ int openFilesForInnerJoin(Database *database, Table *table1, Table *table2, char
     file = fopen(path, "r+");
     file2 = fopen(path2, "r+");
     if (!file || !file2) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table1->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+                "%s\n%s", COLOR_RED, table1->name, strerror(errno), COLOR_RESET);
         free(path);
         free(path2);
         return 1;
@@ -54,7 +55,7 @@ long displaySecondFile(Database *database, FILE *file2, char *key2, SelectedData
         if (!keyFile || !valueFile || !data)
             return 1;
 
-        if (strcmp(currentLine, "-\n") == 0)
+        if (strcmp(currentLine, "\t-\n") == 0)
             return positionTmp;
 
         tokens = strSplit(currentLine, ':');
@@ -63,7 +64,7 @@ long displaySecondFile(Database *database, FILE *file2, char *key2, SelectedData
         valueFile = tokens[1];
         keyFile = &keyFile[1]; // Supprime la tabulation
         valueFile = &valueFile[1]; // Supprime le premier espace
-        valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
+        valueFile[strlen(valueFile + 1)] = '\0'; // Supprime l'espace
 
         data->value = valueFile;
         data->key = keyFile;
@@ -91,7 +92,7 @@ long isKeyInSecondFile(FILE *file2, char *key2, char *value) {
         if (!keyFile || !valueFile)
             return 1;
 
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             if (isData == 0)
                 return 0;
             else
@@ -103,13 +104,13 @@ long isKeyInSecondFile(FILE *file2, char *key2, char *value) {
         valueFile = tokens[1];
         keyFile = &keyFile[1]; // Supprime la tabulation
         valueFile = &valueFile[1]; // Supprime le premier espace
-        valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
+        valueFile[strlen(valueFile + 1)] = '\0'; // Supprime l'espace
 
         /*printf("keyfile : %s\n", keyFile);
         printf("key : %s\n", key2);
         printf("valueFile : %s\n", valueFile);
         printf("value : %s\n", value);*/
-        if (strcmp(keyFile, key2) == 0 && strcmp(valueFile, value) == 0 && strcmp(keyFile, "-\n") != 0) {
+        if (strcmp(keyFile, key2) == 0 && strcmp(valueFile, value) == 0 && strcmp(keyFile, "\t-\n") != 0) {
             isData = 1;
         }
     }
@@ -127,7 +128,7 @@ void ExploreSecondFile(Database *database, FILE *file2, char *key2, char *value,
 
     while (fgets(currentLine, BUFFER_SIZE, file2) != NULL) {
         position = ftell(file2);
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             positionTmp = isKeyInSecondFile(file2, key2, value);
             fseek(file2, position, SEEK_SET);
             if (positionTmp != 0) {
@@ -155,27 +156,26 @@ int innerJoinWithoutConditionWithoutField(Database *database, FILE *file, FILE *
         if (!keyFile || !valueFile || !data)
             return 1;
 
-        if (strcmp(currentLine, "-\n") != 0) {
+        if (strcmp(currentLine, "\t-\n") != 0) {
             tokens = strSplit(currentLine, ':');
             keyFile = tokens[0];
             valueFile = tokens[1];
             keyFile = &keyFile[1]; // Supprime la tabulation
             valueFile = &valueFile[1]; // Supprime le premier espace
-            valueFile[strlen(valueFile+1)] = '\0'; // Supprime l'espace
+            valueFile[strlen(valueFile + 1)] = '\0'; // Supprime l'espace
 
             data->value = valueFile;
             data->key = keyFile;
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
-        }
-        else {
+        } else {
             data->value = "-";
             data->key = NULL;
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
         }
 
-        if (strcmp(keyFile, key) == 0 && strcmp(keyFile, "-\n") != 0) {
+        if (strcmp(keyFile, key) == 0) {
             ExploreSecondFile(database, file2, key2, valueFile, dataHead);
             fseek(file2, positionTmp, SEEK_SET);
         }
@@ -185,11 +185,12 @@ int innerJoinWithoutConditionWithoutField(Database *database, FILE *file, FILE *
     return 0;
 }
 
-void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key, char *key2, Field *field, Condition *condition) {
+void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key, char *key2, Field *field,
+                         Condition *condition) {
     char currentLine[BUFFER_SIZE];
 
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             if (condition == NULL) {
                 if (field == NULL) {
                     innerJoinWithoutConditionWithoutField(database, file, file2, key, key2);
@@ -197,12 +198,13 @@ void selectFuncInnerJoin(Database *database, FILE *file, FILE *file2, char *key,
             }
         }
     }
+
     /* AFFICHAGE DES DATA */
     while (database->selectedData != NULL) {
         if (database->selectedData->key)
-            printf("\t%s: %s\n", database->selectedData->key, database->selectedData->value);
+            printf("%-20s\t", database->selectedData->value);
         else
-            printf("-\n");
+            printf("\n");
         database->selectedData = database->selectedData->next;
     }
 }

@@ -11,6 +11,7 @@
 // TODO: Try to not set global variable
 TokenHash tokens[] = {
         {.token = T_ILLEGAL, .value = "illegal"},
+        {.token = T_INIT, .value = "init"},
         {.token = T_EOS, .value = "end-of-source"},
         {.token = T_LIT_IDENTIFIER, .value = "identifier"},
         {.token = T_LIT_INT, .value = "int"},

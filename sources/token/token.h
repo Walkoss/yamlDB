@@ -17,6 +17,7 @@
 typedef enum {
     T_ILLEGAL = -1,
     T_EOS = 0, // \0
+    T_INIT, // \0
     T_LIT_IDENTIFIER, // is_admin
     T_LIT_INT, // 44
     T_LIT_FLOAT, // 3.44

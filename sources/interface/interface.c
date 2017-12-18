@@ -8,31 +8,27 @@
 
 #include "../database/database.h"
 
+#define SQL_QUERY_SIZE_BUFFER 1024
+
 /**
  * Read user input
- * @param size
  * @return char* if success, NULL for error
  */
-char *getUserInput(int size)
-{
-    char *text;
-    int c;
-    int i = 0;
+char *getUserInput() {
+    char *buffer;
+    size_t len;
 
-    if ((text = xmalloc(sizeof(char) * size + 1, __FUNCTION__)) == NULL)
+    buffer = xmalloc((SQL_QUERY_SIZE_BUFFER + 1), __func__);
+    if (!buffer)
         return NULL;
 
-    printf("> ");
-    while (!i) {
-        while ((c = getchar()) != '\n' && c != EOF) {
-            if (i < size) {
-                text[i] = (char) c;
-                i++;
-            }
-        }
+    if (fgets(buffer, SQL_QUERY_SIZE_BUFFER, stdin) == NULL) {
+        free(buffer);
+        return NULL;
     }
-    text[i] = '\0';
-    printf("\n");
-
-    return text;
+    len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n') {
+        buffer[len - 1] = '\0';
+    }
+    return buffer;
 }
