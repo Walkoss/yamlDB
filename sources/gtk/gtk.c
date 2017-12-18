@@ -117,7 +117,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         gtkDatabase->pTableDataListView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gtkDatabase->pTableDataList));
 
         // On ajoute les colonnes, on les nomme et on leur donne une position
-        /*selectedDataTmp = database->selectedData;
+        selectedDataTmp = database->selectedData;
         for (int i = 0; (selectedDataTmp != NULL && selectedDataTmp->key); i++) {
             i = (i == 3) ? 0 : i;
             if (selectedDataTmp->key) {
@@ -126,23 +126,23 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
                 gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
             }
             selectedDataTmp = selectedDataTmp->next;
-        }*/
+        }
 
-        Field *fieldTmp = table->fieldHead;
+        /*Field *fieldTmp = table->fieldHead;
         for(int i = 0; fieldTmp != NULL; i++)
         {
             cellDataRenderer = gtk_cell_renderer_text_new();
             columnDataList = gtk_tree_view_column_new_with_attributes(fieldTmp->name, cellDataRenderer, "text", i, NULL);
             gtk_tree_view_append_column(GTK_TREE_VIEW(gtkDatabase->pTableDataListView), columnDataList);
             fieldTmp = fieldTmp->next;
-        }
+        }*/
 
         gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
         gtk_widget_show(gtkDatabase->pTableDataListView);
         gtkDatabase->tableDataExist = TRUE;
     }
     else
-    {
+    {/*
         if (gtkDatabase->tableDataExist) {
             gtk_widget_destroy(gtkDatabase->pTableDataListView);
             gtkDatabase->tableDataExist = FALSE;
@@ -168,7 +168,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         }
         gtk_container_add(GTK_CONTAINER(gtkDatabase->pObject[13]), gtkDatabase->pTableDataListView);
         gtk_widget_show(gtkDatabase->pTableDataListView);
-        gtkDatabase->tableDataExist = TRUE;
+        gtkDatabase->tableDataExist = TRUE;*/
     }
 }
 
@@ -389,7 +389,7 @@ void createTableCallback(GtkWidget *pButton, gpointer data)
         return;
     }
 
-    dialog = gtk_dialog_new_with_buttons ("Message", GTK_WINDOW(gtk_widget_get_toplevel(pButton)), GTK_DIALOG_MODAL, "Annuler", GTK_RESPONSE_CANCEL, "Créer la table", GTK_RESPONSE_OK, NULL);
+    dialog = gtk_dialog_new_with_buttons ("Création de table", GTK_WINDOW(gtk_widget_get_toplevel(pButton)), GTK_DIALOG_MODAL, "Annuler", GTK_RESPONSE_CANCEL, "Créer la table", GTK_RESPONSE_OK, NULL);
     content_area = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
 
     // Initialisation de l'element "GTK_ENTRY" permettant d'entrer le nom de la table
@@ -546,6 +546,7 @@ void createDatabaseCallback(GtkWidget *pButton, gpointer data)
             gtk_label_set_text(GTK_LABEL(gtkDatabase->pObject[6]), gtkDatabase->database->name);
             initTableComboBox(gtkDatabase);
             gtk_widget_set_sensitive(gtkDatabase->pObject[9], TRUE);
+            gtk_widget_set_sensitive(gtkDatabase->pObject[4], TRUE);
         }
     }
     g_list_free(pList);
