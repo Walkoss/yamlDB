@@ -7,6 +7,7 @@
 */
 
 #include "database.h"
+#include "../print_color/print_color.h"
 
 /**
  * Initialize a Database structure
@@ -62,14 +63,15 @@ int useDatabase(Database *database) {
     if (access(path, 0) == 0) { // If directory exist
         if (database->isUsed == 0) {
             database->isUsed = 1;
-            initTables(database);
+            if (initTables(database) != 0) {
+                return 1;
+            }
         } else {
-            fprintf(stderr, "Error : you are already using this database\n");
-            return 1;
+            print_error_color("Error : you are already using this database\n");
         }
     } else {
-        fprintf(stderr, "An error has occured when opening database '%s': "
-                "%s\n", database->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when opening database '%s': "
+                "%s%s\n", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         return 1;
     }
 
@@ -92,8 +94,8 @@ int createDatabase(Database *database) {
         return 1;
 
     if (mkdir(path, 0777) == -1) {
-        fprintf(stderr, "An error has occured when creating database '%s': "
-                "%s\n", database->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when creating database '%s': "
+                "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;
     }
@@ -143,8 +145,8 @@ int dropDatabase(Database *database) {
         return 1;
 
     if (nftw(path, removeFile, NOPENFD, FTW_DEPTH) == -1) {
-        fprintf(stderr, "An error has occured when removing database '%s': "
-                "%s\n", database->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing database '%s': "
+                "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;
     }

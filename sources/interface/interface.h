@@ -19,32 +19,11 @@
 #include "../utils/xmalloc.h"
 #include "../database/database.h"
 
-typedef struct SDatabaseFunc {
-    int (*function)(Database*);
-} TDatabaseFunc;
-
-typedef struct STableFunc {
-    int (*function)(Database*, Table*);
-} TTableFunc;
-
 typedef struct SSentences
 {
     char *sentence;
 } TSentences;
 
-int userInterface();
-Database *choice(long userChoice, Database *database);
-void printInstruction(int sentence);
-char *getUserInput(int size);
-int isAllDigit(const char* str);
-void isSuccess(int result);
-char *isSuccessGtk(int result);
-Database *createField(Database *database, Table* table, char *name);
-int preCreateTable(Database* database, Table* table);
 FieldType getEnum(long type);
-char *getFieldName(Table *table);
-int getDatabaseFuncLength();
-int getTableFuncLength();
-Database *preInitDatabase(Database *database, long userChoice);
 
 #endif //YAMLDB_INTERFACE_H

@@ -30,4 +30,6 @@ Field *fieldListLast(Field *node);
 
 void fieldListAppend(Field **node, Field *newNode);
 
+void fieldListReverse(Field **node);
+
 #endif //YAMLDB_FIELD_H

@@ -7,6 +7,8 @@
 */
 
 #include "../database/database.h"
+#include "../print_color/print_color.h"
+#include "../hash_map/hash_map.h"
 
 SelectedData *selectedDataListLast(SelectedData *node) {
     while (node->next != NULL)
@@ -27,39 +29,96 @@ void selectedDataListAppend(SelectedData **node, SelectedData *newNode) {
  * @param currentField
  * @return position on the file
  */
-long displaySingleData(FILE *file, Field *currentField, Database *database) {
+void displaySingleData(FILE *file, Field *currentField, Database *database, Condition *condition) {
     char currentLine[BUFFER_SIZE];
     char *key;
     char *value;
     char **tokens;
-    long positionTmp;
+    Field *fieldCopy;
+    SelectedData *data;
+    SelectedData *dataHead;
+    HashMap *hashMap;
+    int conditionFulfilled;
 
-    positionTmp = 0;
+    dataHead = NULL;
+    hashMap = hashMapInit(5);
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
 
         if (!key || !value)
-            return 1;
+            return;
 
-        if (strcmp(currentLine, "-\n") == 0)
-            return positionTmp;
+        if (strcmp(currentLine, "\t-\n") == 0) {
+            conditionFulfilled = 0;
+            if (condition) {
+                if (!strcmp(hashMapGet(hashMap, condition->key), condition->value)) {
+                    fieldCopy = currentField;
+                    while (fieldCopy != NULL) {
+                        data = xmalloc(sizeof(Data), __func__);
+                        data->value = (char *) hashMapGet(hashMap, fieldCopy->name);
+                        data->key = fieldCopy->name;
+                        data->next = NULL;
+                        selectedDataListAppend(&dataHead, data);
+                        fieldCopy = fieldCopy->next;
+                        conditionFulfilled = 1;
+                    }
+                }
+            } else {
+                fieldCopy = currentField;
+                while (fieldCopy != NULL) {
+                    data = xmalloc(sizeof(Data), __func__);
+                    data->value = (char *) hashMapGet(hashMap, fieldCopy->name);
+                    data->key = fieldCopy->name;
+                    data->next = NULL;
+                    selectedDataListAppend(&dataHead, data);
+                    fieldCopy = fieldCopy->next;
+                }
+            }
 
-        tokens = strSplit(currentLine, ':');
-
-        key = tokens[0];
-        value = tokens[1];
-        key = &key[1]; // Supprime la tabulation
-        value = &value[1]; // Supprime le premier espace
-
-        if (strcmp(key, currentField->name) == 0 && strcmp(key, "-\n") != 0) {
-            printf("\t%s: %s", key, value);
+            if (conditionFulfilled || !condition) {
+                data = xmalloc(sizeof(Data), __func__);
+                data->value = "-";
+                data->key = NULL;
+                data->next = NULL;
+                selectedDataListAppend(&dataHead, data);
+            }
+        } else {
+            tokens = strSplit(currentLine, ':');
+            key = tokens[0];
+            value = tokens[1];
+            key = &key[1]; // Supprime la tabulation
+            value = &value[1]; // Supprime le premier espace
+            value[strlen(value + 1)] = '\0'; // Supprime l'espace
+            hashMapPut(hashMap, key, strdup(value));
         }
-
-        positionTmp = ftell(file);
     }
 
-    return positionTmp;
+    if (condition) {
+        if (!strcmp(hashMapGet(hashMap, condition->key), condition->value)) {
+            fieldCopy = currentField;
+            while (fieldCopy != NULL) {
+                data = xmalloc(sizeof(Data), __func__);
+                data->value = (char *) hashMapGet(hashMap, fieldCopy->name);
+                data->key = fieldCopy->name;
+                data->next = NULL;
+                selectedDataListAppend(&dataHead, data);
+                fieldCopy = fieldCopy->next;
+            }
+        }
+    } else {
+        fieldCopy = currentField;
+        while (fieldCopy != NULL) {
+            data = xmalloc(sizeof(Data), __func__);
+            data->value = (char *) hashMapGet(hashMap, fieldCopy->name);
+            data->key = fieldCopy->name;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
+            fieldCopy = fieldCopy->next;
+        }
+    }
+
+    database->selectedData = dataHead;
 }
 
 /**
@@ -69,20 +128,14 @@ long displaySingleData(FILE *file, Field *currentField, Database *database) {
  * @return position on the file
  */
 long BrowseSingleData(FILE *file, Field *field, Database *database) {
-    Field *currentField;
-    long position;
-    long positionTmp;
+//    long position;
+//    long positionTmp;
+//
+//    position = ftell(file);
+//    positionTmp = displaySingleData(file, field, database);
+//    fseek(file, position, SEEK_SET);
 
-    positionTmp = 0;
-    currentField = field;
-    printf("-\n");
-    while (currentField != NULL) {
-        position = ftell(file);
-        positionTmp = displaySingleData(file, currentField, database);
-        fseek(file, position, SEEK_SET);
-        currentField = currentField->next;
-    }
-    return positionTmp;
+    return 4;
 }
 
 /**
@@ -103,40 +156,27 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
         if (!key || !value || !data)
             return 1;
 
-        data->value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-        data->key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
-
-        if (strcmp(currentLine, "-\n") != 0) {
-
+        if (strcmp(currentLine, "\t-\n") != 0) {
             tokens = strSplit(currentLine, ':');
             key = tokens[0];
             value = tokens[1];
-
             key = &key[1]; // Supprime la tabulation
             value = &value[1]; // Supprime le premier espace
-            value[strlen(value+1)] = '\0'; // Supprime l'espace
+            value[strlen(value + 1)] = '\0'; // Supprime l'espace
 
             strcpy(data->value, value);
             strcpy(data->key, key);
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
-        }
-        else {
-            strcpy(data->value, "-");
+        } else {
+            data->value = "-";
             data->key = NULL;
             data->next = NULL;
             selectedDataListAppend(&dataHead, data);
         }
     }
-    database->selectedData = dataHead;
 
-    /*while (database->selectedData != NULL) {
-        if (database->selectedData->key)
-            printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
-        else
-            printf("-\n");
-        database->selectedData = database->selectedData->next;
-    }*/
+    database->selectedData = dataHead;
     return 0;
 }
 
@@ -149,17 +189,48 @@ int displayAllDataWithoutCondition(FILE *file, Database *database) {
 long displayAllData(FILE *file, Database *database) {
     char currentLine[BUFFER_SIZE];
     long positionTmp;
+    char *key;
+    char *value;
+    char **tokens;
+    SelectedData *data;
+    SelectedData *dataHead;
 
+    dataHead = NULL;
     positionTmp = 0;
-    printf("-\n");
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
-        if (strcmp(currentLine, "-\n") == 0)
+        key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
+        data = xmalloc(sizeof(Data), __func__);
+        if (strcmp(currentLine, "\t-\n") == 0) {
+            /*data->value = "-";
+            data->key = NULL;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);*/
+            database->selectedData = dataHead;
             return positionTmp;
+        }
 
-        printf("%s", currentLine);
+        if (!key || !value || !data)
+            return 1;
+
+        if (strcmp(currentLine, "\t-\n") != 0) {
+            tokens = strSplit(currentLine, ':');
+            key = tokens[0];
+            value = tokens[1];
+            key = &key[1]; // Supprime la tabulation
+            value = &value[1]; // Supprime le premier espace
+            value[strlen(value + 1)] = '\0'; // Supprime l'espace
+
+            data->value = value;
+            data->key = key;
+            data->next = NULL;
+            selectedDataListAppend(&dataHead, data);
+        }
+
         positionTmp = ftell(file);
     }
 
+    database->selectedData = dataHead;
     return positionTmp;
 }
 
@@ -173,35 +244,17 @@ void selectMethod(FILE *file, Field *field, Condition *condition, Database *data
     char currentLine[BUFFER_SIZE];
     long position;
     long positionTmp;
+    Field *fieldCopy;
 
+    // To consume meta data
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
-        if (strcmp(currentLine, "-\n") == 0) {
-            if (condition == NULL) {
-                if (field == NULL)
-                    displayAllDataWithoutCondition(file, database);
-                else
-                    fseek(file, BrowseSingleData(file, field,  database), SEEK_SET);
-            } else {
-                positionTmp = isConditionFulfilled(file, condition);
-                fseek(file, position, SEEK_SET);
-                if (positionTmp != 0) {
-                    if (field == NULL)
-                        fseek(file, displayAllData(file,  database), SEEK_SET);
-                    else
-                        fseek(file, BrowseSingleData(file, field,  database), SEEK_SET);
-                }
-            }
+        if (strcmp(currentLine, "\t-\n") == 0) {
+            break;
         }
     }
 
-    /*while (database->selectedData != NULL) {
-        if (database->selectedData->key)
-            printf("%s: %s\n", database->selectedData->key, database->selectedData->value);
-        else
-            printf("-\n");
-        database->selectedData = database->selectedData->next;
-    }*/
+    displaySingleData(file, field, database, condition);
 }
 
 /**
@@ -225,8 +278,8 @@ int selectData(Database *database, Table *table, Field *field, Condition *condit
 
     file = fopen(path, "r+");
     if (!file) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         return 1;
     }

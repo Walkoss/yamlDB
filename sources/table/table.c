@@ -8,6 +8,7 @@
 
 #include "../database/database.h"
 #include "../field/field.h"
+#include "../print_color/print_color.h"
 
 /**
  * Initialize the tables in Database structure
@@ -21,8 +22,8 @@ int initTables(Database *database) {
 
     dir = opendir(getDatabasePath(database->name));
     if (!dir) {
-        fprintf(stderr, "An error has occured when opening database '%s': "
-                "%s\n", database->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when opening database '%s': "
+                "%s\n%s", COLOR_RED, database->name, strerror(errno), COLOR_RESET);
         return 1;
     }
 
@@ -37,13 +38,13 @@ int initTables(Database *database) {
                 return 1;
 
             file->d_name[strlen(file->d_name) - 4] = '\0'; // To remove the ".yml"
-            //table->name = file->d_name;
             strcpy(table->name, file->d_name);
             table->fieldHead = NULL;
             table->next = database->tableHead;
-            //printf("%s\n", table->name);
 
-            initFields(database, table);
+            if (initFields(database, table) != 0) {
+                return 1;
+            }
             database->tableHead = table;
         }
     }
@@ -88,8 +89,10 @@ int freeTables(Database *database) {
 Table *findTable(Database *database, char *tableName) {
     Table *currentTable;
 
-    if (database == NULL)
+    if (!database || !database->isUsed) {
+        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return NULL;
+    }
 
     currentTable = database->tableHead;
 
@@ -99,6 +102,7 @@ Table *findTable(Database *database, char *tableName) {
         currentTable = currentTable->next;
     }
 
+    fprintf(stderr, "%sTable %s doesn't exist\n%s", COLOR_RED, tableName, COLOR_RESET);
     return NULL;
 }
 
@@ -117,26 +121,20 @@ int freeTable(Database *database, Table *table) {
 
     currentTable = database->tableHead;
 
-    //printf("1\n");
     while (currentTable != NULL) {
         if (currentTable->next == table) {
-            //printf("2\n");
             tableToFree = currentTable->next;
             currentTable->next = currentTable->next->next;
             free(tableToFree);
             break;
         } else if (currentTable == table) {
             tableToFree = currentTable;
-            //printf("3\n");
             database->tableHead = currentTable->next;
-            //printf("4\n");
             free(tableToFree);
-            //printf("5\n");
             break;
         }
         currentTable = currentTable->next;
     }
-    //printf("OK\n");
 
     return 0;
 }
@@ -150,8 +148,8 @@ int freeTable(Database *database, Table *table) {
 int createTable(Database *database, Table *table) {
     char *path;
 
-    if (!database) {
-        fprintf(stderr, "You need to use a database\n");
+    if (!database || !database->isUsed) {
+        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
         return 1;
     }
 
@@ -167,7 +165,9 @@ int createTable(Database *database, Table *table) {
         addFieldsInFile(database, table);
         database->tableHead = table;
     } else {
-        fprintf(stderr, "The table '%s' already exist\n", table->name);
+        fprintf(stderr, "%sThe table '%s' already exist\n%s", COLOR_RED, table->name, COLOR_RESET);
+        free(path);
+        return 1;
     }
     free(path);
 
@@ -184,15 +184,20 @@ int createTable(Database *database, Table *table) {
 int dropTable(Database *database, Table *table) {
     char *path;
 
-    if (!database || !table)
+    if (!database || !database->isUsed) {
+        fprintf(stderr, "%sYou need to use a database\n%s", COLOR_RED, COLOR_RESET);
+        return 1;
+    }
+
+    if (!table)
         return 1;
 
     path = getTablePath(database->name, table->name);
     if (!path)
         return 1;
     if (remove(path) == -1) {
-        fprintf(stderr, "An error has occured when removing table '%s': "
-                "%s\n", table->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing table '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
 
         free(path);
         return 1;

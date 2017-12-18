@@ -33,11 +33,10 @@ set(SOURCE_FILES
         sources/select/union.c
         sources/interface/interface.c
         sources/interface/interface.h
-        sources/interface/interface.c
-        sources/interface/interface.h
         sources/gtk/gtk.c
         sources/gtk/gtk.h
-        sources/field/field.h)
+        sources/print_color/print_color.c
+        sources/print_color/print_color.h)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3 REQUIRED gtk+-3.0)

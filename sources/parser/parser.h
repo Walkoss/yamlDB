@@ -27,7 +27,7 @@ Parser *parserInit(char *buffer);
 
 void parserFree(Parser *parser);
 
-void parse(Parser *parser, Database **database);
+int parse(Parser *parser, Database **database);
 
 int is(Parser *parser, TokenType tokenType);
 

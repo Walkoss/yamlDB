@@ -3,6 +3,29 @@
 //
 
 #include "gtk.h"
+#include "../print_color/print_color.h"
+
+/**
+ * Gets user input and begins processes
+ * @return FieldType
+ */
+FieldType getEnum(long type)
+{
+    switch (type)
+    {
+        case 1:
+            return INT;
+        case 2:
+            return FLOAT;
+        case 3:
+            return CHAR;
+        case 4:
+            return VARCHAR;
+        default:
+            return INT;
+    }
+    return INT;
+}
 
 void onDestroy(GtkWidget *pWidget, gpointer pData)
 {
@@ -47,7 +70,7 @@ void runSqlRequestCallback(GtkWidget *pButton, gpointer data)
 void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *request)
 {
     Parser *parser;
-    Database *database = NULL;
+    //Database *database;
     int column = 0;
     GType *columnsType;
     GtkCellRenderer *cellDataRenderer;
@@ -58,26 +81,41 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
     if (request == NULL)
     {
         sql = xmalloc(sizeof(char) * (strlen(table->name) + strlen(gtkDatabase->database->name) + 30), __func__);
-        strcpy(sql, "USE ");
-        strcat(sql, gtkDatabase->database->name);
-        strcat(sql, ";SELECT * FROM ");
+        strcat(sql, "SELECT * FROM ");
         strcat(sql, table->name);
         strcat(sql, ";");
         parser = parserInit(sql);
-        parse(parser, &database);
+        char buf[BUFSIZ];
+        setbuf(stderr, buf);
+        if (parse(parser, &gtkDatabase->database))
+        {
+            instanceMessageDialog(gtkDatabase->pTableDataBox, buf);
+            updateInformationLabel(gtkDatabase, isSuccessGtk(1));
+        }
+        else
+            updateInformationLabel(gtkDatabase, isSuccessGtk(0));
         parserFree(parser);
+        free(sql);
     }
     else
     {
         parser = parserInit(request);
-        parse(parser, &database);
+        char buf[BUFSIZ];
+        setbuf(stderr, buf);
+        if (parse(parser, &gtkDatabase->database))
+        {
+            instanceMessageDialog(gtkDatabase->pTableDataBox, buf);
+            updateInformationLabel(gtkDatabase, isSuccessGtk(1));
+        }
+        else
+            updateInformationLabel(gtkDatabase, isSuccessGtk(0));
         parserFree(parser);
     }
 
-    if (database && database->selectedData)
+    if (gtkDatabase->database && gtkDatabase->database->selectedData)
     {
         // On récupère la première liste de valeur pour obtenir la key/valuedans le bon ordre
-        SelectedData *selectedDataTmp = database->selectedData;
+        SelectedData *selectedDataTmp = gtkDatabase->database->selectedData;
         while (selectedDataTmp != NULL && selectedDataTmp->key) {
             if (selectedDataTmp->key)
                 column++;
@@ -96,7 +134,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         gtkDatabase->pTableDataList = gtk_list_store_newv(column, columnsType);
 
         // On ajoute les données dans la liste en fonction de la position des futurs colonnes
-        selectedDataTmp = database->selectedData;
+        selectedDataTmp = gtkDatabase->database->selectedData;
         while (selectedDataTmp != NULL) {
             if (selectedDataTmp->key) {
                 GtkTreeIter iterColumn;
@@ -117,7 +155,7 @@ void initTableDataStoreList(GtkDatabase *gtkDatabase, Table *table, char *reques
         gtkDatabase->pTableDataListView = gtk_tree_view_new_with_model(GTK_TREE_MODEL(gtkDatabase->pTableDataList));
 
         // On ajoute les colonnes, on les nomme et on leur donne une position
-        selectedDataTmp = database->selectedData;
+        selectedDataTmp = gtkDatabase->database->selectedData;
         for (int i = 0; (selectedDataTmp != NULL && selectedDataTmp->key); i++) {
             i = (i == 3) ? 0 : i;
             if (selectedDataTmp->key) {
@@ -180,7 +218,6 @@ void initTableComboBox(GtkDatabase *gtkDatabase)
 
     gtk_list_store_clear(gtkDatabase->pTableList);
     if (gtkDatabase->database != NULL && gtkDatabase->database->tableHead == NULL) {
-        printf("1\n");
         GtkTreeIter iterTable;
         gtk_list_store_prepend(gtkDatabase->pTableList, &iterTable);
         gtk_list_store_set(gtkDatabase->pTableList, &iterTable, 0, "Aucune table existante.", -1);
@@ -519,7 +556,7 @@ void removeTableCallback(GtkWidget *pButton, gpointer data)
     {
         Table *table = getTableFromDatabase(gtkDatabase, tableName);
         table->name = tableName;
-        isSuccess(dropTable(gtkDatabase->database, table));
+        updateInformationLabel(gtkDatabase, isSuccessGtk(dropTable(gtkDatabase->database, table)));
         initTableComboBox(gtkDatabase);
     }
 }

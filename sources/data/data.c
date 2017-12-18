@@ -7,6 +7,7 @@
 */
 
 #include "../database/database.h"
+#include "../print_color/print_color.h"
 
 /**
  * Add data on file
@@ -37,8 +38,7 @@ int addData(Database *database, Table *table, Data *data) {
 
     currentData = data;
 
-    // TODO: fix this...
-    fprintf(file, "-\n");
+    fprintf(file, "\t-\n");
 
     while (currentData != NULL) {
         fprintf(file, "\t%s: %s\n", currentData->field->name, currentData->value);
@@ -78,7 +78,7 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
 
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             if (condition != NULL)
                 positionTmp = isConditionFulfilled(file, condition);
             else {
@@ -87,10 +87,11 @@ void removeData(FILE *file, FILE *fileTmp, Condition *condition) {
                 fclose(fileTmp);
             }
 
-            if (positionTmp == 0) // Si ne répond pas à la condition where on replace le pointeur
+            if (positionTmp == 0) {// Si ne répond pas à la condition where on replace le pointeur
                 fseek(file, position, SEEK_SET);
-            else
+            } else {
                 fseek(file, positionTmp, SEEK_SET);
+            }
         }
         fputs(currentLine, fileTmp);
     }
@@ -121,8 +122,8 @@ int openFilesForRemoving(Database *database, Table *table, Condition *condition)
     file = fopen(path, "r+");
     fileTmp = fopen(pathTmp, "w+");
     if (!file || !fileTmp) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+                "%s%s\n", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         free(pathTmp);
         return 1;
@@ -161,7 +162,7 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
         if (!key || !value)
             return 1;
 
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             if (isData == 0)
                 return 0;
             else
@@ -175,7 +176,7 @@ long isConditionFulfilled(FILE *file, Condition *condition) {
         value = &value[1]; // Supprime le premier espace
         value[strlen(value) - 1] = '\0'; // Supprime le /n
 
-        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0 && strcmp(key, "-\n") != 0)
+        if (strcmp(value, condition->value) == 0 && strcmp(key, condition->key) == 0)
             isData = 1;
     }
 
@@ -208,7 +209,7 @@ long updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
         if (!key || !value)
             return 1;
 
-        if (strcmp(currentLine, "-\n") == 0)
+        if (strcmp(currentLine, "\t-\n") == 0)
             return positionTmp;
 
         tokens = strSplit(currentLine, ':');
@@ -222,10 +223,10 @@ long updateDataOnFile(FILE *file, FILE *fileTmp, Data *data) {
         fputs(key, fileTmp);
         fputs(": ", fileTmp);
 
-        if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0) {
+        if (strcmp(key, data->field->name) == 0 && strcmp(key, "\t-\n") != 0) {
             fputs(data->value, fileTmp);
             fputs("\n", fileTmp);
-        } else if (strcmp(key, data->field->name) != 0 && strcmp(key, "-\n") != 0)
+        } else if (strcmp(key, data->field->name) != 0 && strcmp(key, "\t-\n") != 0)
             fputs(value, fileTmp);
 
         positionTmp = ftell(file);
@@ -240,7 +241,7 @@ int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
     char currentLine[BUFFER_SIZE];
     char **tokens;
 
-    fputs("-\n", fileTmp);
+    fputs("\t-\n", fileTmp);
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         key = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
         value = xmalloc(sizeof(char) * MAX_FIELD_NAME_SIZE, __func__);
@@ -248,7 +249,7 @@ int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
         if (!key || !value)
             return 1;
 
-        if (strcmp(currentLine, "-\n") != 0) {
+        if (strcmp(currentLine, "\t-\n") != 0) {
             tokens = strSplit(currentLine, ':');
 
             key = tokens[0];
@@ -256,7 +257,7 @@ int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
             key = &key[1]; // Supprime la tabulation
             value = &value[1]; // Supprime le premier espace
 
-            if (strcmp(key, data->field->name) == 0 && strcmp(key, "-\n") != 0) {
+            if (strcmp(key, data->field->name) == 0 && strcmp(key, "\t-\n") != 0) {
                 fputs("\t", fileTmp);
                 fputs(key, fileTmp);
                 fputs(": ", fileTmp);
@@ -269,7 +270,7 @@ int updateEveryData(FILE *file, FILE *fileTmp, Data *data) {
                 fputs(value, fileTmp);
             }
         } else
-            fputs("-\n", fileTmp);
+            fputs("\t-\n", fileTmp);
     }
 
     return 0;
@@ -291,7 +292,7 @@ void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
     while (fgets(currentLine, BUFFER_SIZE, file) != NULL) {
         position = ftell(file);
 
-        if (strcmp(currentLine, "-\n") == 0) {
+        if (strcmp(currentLine, "\t-\n") == 0) {
             if (condition == NULL) {
                 updateEveryData(file, fileTmp, data);
                 break;
@@ -299,6 +300,7 @@ void updateData(FILE *file, FILE *fileTmp, Data *data, Condition *condition) {
                 positionTmp = isConditionFulfilled(file, condition);
                 fseek(file, position, SEEK_SET);
                 if (positionTmp != 0) {
+                    fputs("\t-\n", fileTmp);
                     updateDataOnFile(file, fileTmp, data);
                 }
             }
@@ -332,8 +334,8 @@ int openFilesForUpdating(Database *database, Table *table, Data *data, Condition
     file = fopen(path, "r+");
     fileTmp = fopen(pathTmp, "w+");
     if (!file || !fileTmp) {
-        fprintf(stderr, "An error has occured when removing data in table '%s': "
-                "%s\n", table->name, strerror(errno));
+        fprintf(stderr, "%sAn error has occured when removing data in table '%s': "
+                "%s\n%s", COLOR_RED, table->name, strerror(errno), COLOR_RESET);
         free(path);
         free(pathTmp);
         return 1;
